@@ -1,0 +1,119 @@
+[
+  {
+    "fila": 1,
+    "lote": "1",
+    "masters": 2,
+    "talla": {
+      "co_talla": 17,
+      "descripcion": "U-15"
+    } 
+  },
+  {
+    "fila": 1,
+    "lote": "113",
+    "masters": 13,
+    "talla": {
+      "co_talla": 17,
+      "descripcion": "U-15"
+    }
+  },
+  {
+    "fila": 1,
+    "lote": "2",
+    "masters": 13,
+    "talla": {
+      "co_talla": 17,
+      "descripcion": "U-15"
+    }
+  },
+  {
+    "fila": 1,
+    "lote": "45",
+    "masters": 144,
+    "talla": {
+      "co_talla": 17,
+      "descripcion": "U-15"
+    }
+  },
+  {
+    "fila": 2,
+    "lote": "1234",
+    "masters": 13,
+    "talla": {
+      "co_talla": 3,
+      "descripcion": "30-40"
+    }
+  },
+  {
+    "fila": 1,
+    "lote": "1",
+    "masters": 200,
+    "talla": {
+      "co_talla": 17,
+      "descripcion": "U-15"
+    }
+  },
+  {
+    "fila": 1,
+    "lote": "113",
+    "masters": 150,
+    "talla": {
+      "co_talla": 17,
+      "descripcion": "U-15"
+    }
+  },
+  {
+    "fila": 1,
+    "lote": "2",
+    "masters": 103,
+    "talla": {
+      "co_talla": 17,
+      "descripcion": "U-15"
+    }
+  },
+  {
+    "fila": 1,
+    "lote": "45",
+    "masters": 144,
+    "talla": {
+      "co_talla": 17,
+      "descripcion": "U-15"
+    }
+  },
+  {
+    "fila": 1,
+    "lote": "13",
+    "masters": 200,
+    "talla": {
+      "co_talla": 17,
+      "descripcion": "U-15"
+    }
+  },
+  {
+    "fila": 1,
+    "lote": "1133",
+    "masters": 150,
+    "talla": {
+      "co_talla": 17,
+      "descripcion": "U-15"
+    }
+  },
+  {
+    "fila": 1,
+    "lote": "23",
+    "masters": 103,
+    "talla": {
+      "co_talla": 17,
+      "descripcion": "U-15"
+    }
+  },
+  {
+    "fila": 1,
+    "lote": "45",
+    "masters": 144,
+    "talla": {
+      "co_talla": 17,
+      "descripcion": "U-15"
+    }
+  }
+]

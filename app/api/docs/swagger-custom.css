@@ -1,0 +1,22 @@
+body {
+    background-color: white !important;
+    color: black !important;
+}
+
+.swagger-ui .topbar {
+    background-color: white !important;
+    border-bottom: 1px solid #e5e5e5 !important;
+}
+
+.swagger-ui .info, .swagger-ui .scheme-container, .swagger-ui .opblock {
+    background-color: white !important;
+}
+
+.swagger-ui .opblock .opblock-summary {
+    /*background-color: #f7f7f7 !important;*/
+    border: 1px solid #e5e5e5 !important;
+}
+
+.swagger-ui .opblock .opblock-summary-method {
+    color: white !important;
+}

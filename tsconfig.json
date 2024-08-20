@@ -1,0 +1,77 @@
+{
+  "compilerOptions": {
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "types": [
+      "leaflet",
+      "leaflet-draw"
+    ],
+    "strict": false,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "downlevelIteration": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "@types/*": [
+        "./app/_types/*"
+      ],
+      "@lib/*": [
+        "./app/_lib/*"
+      ],
+      "@interface/*": [
+        "./app/api/_interface/*"
+      ],
+      "@db/*": [
+        "./db/*"
+      ],
+      "@repository/*": [
+        "./app/api/_repository/*"
+      ],
+      "@utils/*": [
+        "./app/api/_utils/*"
+      ],
+      "@components/*": [
+        "./app/_components/*"
+      ],
+      "@api/*": [
+        "./app/api/*"
+      ]
+    },
+    "typeRoots": [
+      "./node_modules/@types",
+      "./types"
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "types",
+    "leaflet-measure.d.ts",
+    "app/**/*.ts",
+    "app/**/*.js",
+    "app/(dashboard)/admin/iguanas"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
