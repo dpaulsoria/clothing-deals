@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { MapService } from '@/app/services/map.service';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaChartBar, FaArrowLeft, FaArrowRight } from 'react-icons/fa';
+import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 
 export default function GraficosPage() {
   // const [statistics, setStatistics] = useState<Statistics[]>([]);
@@ -13,12 +12,9 @@ export default function GraficosPage() {
   // const [selectedStatistic, setSelectedStatistic] = useState<Statistics | null>(
   //   null
   // );
-  const [newName, setNewName] = useState('');
   const [page, setPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const limit = 10; // Número de elementos por página
-
-  const user_id = JSON.parse(sessionStorage.getItem('user') || '{}').id;
 
   // const fetchStatistics = useCallback(async () => {
   //   try {

@@ -1,6 +1,4 @@
 import axios, { AxiosResponse } from 'axios';
-import { ApiResponse, apiService } from './api.service';
-import { CustomResponse } from '@utils/customResponse';
 
 export const ImageService = {
   getThumbnail(filePath: string | null): string {
@@ -19,7 +17,7 @@ export const ImageService = {
 
   async getRasterImageByProxy(url: string) {
     try {
-      const response: AxiosResponse<ApiResponse<ArrayBuffer>> = await axios.get(
+      const response: AxiosResponse<ArrayBuffer> = await axios.get(
         `/api/image?url=${url}`,
         { responseType: 'arraybuffer' }
       );
@@ -27,7 +25,7 @@ export const ImageService = {
       else return null;
     } catch (error) {
       console.error('Error getting raster image by proxy:', error);
-      handleApiError(error, 'raster' as keyof CustomResponse, 'get');
+      handleApiError(error, 'raster', 'get');
       return null;
     }
   },
