@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
 import { motion } from 'framer-motion';
 import SatisfactionChart from '../(dashboard)/charts/SatisfactionChart';
+import { SatisfactionByQuarter } from '@components/faker/userSatisfaction';
 
 interface UserSatisfactionData {
   id: string;
@@ -12,15 +13,10 @@ interface UserSatisfactionData {
   createdAt: string;
 }
 
-interface UserSatisfactionGrouped {
-  score: number;
-  count: number;
-}
-
 export default function GraficosPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<UserSatisfactionGrouped[]>([]);
+  const [data, setData] = useState<SatisfactionByQuarter[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,27 +27,51 @@ export default function GraficosPage() {
         }
 
         const csvData = await response.text();
+
         Papa.parse<UserSatisfactionData>(csvData, {
           header: true,
           complete: (result) => {
             const satisfactionData = result.data;
 
-            // Agrupar los datos por `score` y contar las ocurrencias
-            const groupedData: { [key: number]: number } = {};
+            // Paso 2: Agrupar los datos por trimestre
+            const groupedData: { [key: string]: number[] } = {};
             satisfactionData.forEach((item) => {
-              const score = item.score;
-              if (!groupedData[score]) {
-                groupedData[score] = 0;
-              }
-              groupedData[score] += 1;
+              const date = new Date(item.createdAt);
+              console.log(`Date`, date);
+              const quarter = `Q${Math.ceil((date.getMonth() + 1) / 3)} ${date.getFullYear()}`;
+              console.log(quarter);
+              // Si el trimestre no existe en el grupo, lo creamos
+              if (!groupedData[quarter]) groupedData[quarter] = [];
+
+              console.log(groupedData);
+              // Almacenar el puntaje en el trimestre correspondiente
+              groupedData[quarter].push(Number(item.score));
             });
 
-            const chartData = Object.keys(groupedData).map((score) => ({
-              score: parseInt(score),
-              count: groupedData[score],
-            }));
+            // Paso 4: Calcular el promedio por trimestre
+            const averagedData: SatisfactionByQuarter[] = Object.keys(
+              groupedData
+            ).map((quarter) => {
+              const scores = groupedData[quarter];
 
-            setData(chartData);
+              // Verificar el contenido del array de puntajes
+              console.log(`Quarter: ${quarter}, Scores Array: `, scores);
+
+              const totalScores = scores.length;
+              const averageScore =
+                totalScores > 0
+                  ? scores.reduce((sum, score) => sum + score, 0) / totalScores
+                  : 0;
+
+              console.log(
+                `Quarter: ${quarter}, Total Scores: ${totalScores}, Average: ${averageScore}`
+              );
+
+              return { quarter, averageScore };
+            });
+
+            console.log('Final Averaged Data:', averagedData);
+            setData(averagedData);
             setLoading(false);
           },
           error: () => {
@@ -60,6 +80,7 @@ export default function GraficosPage() {
           },
         });
       } catch (error) {
+        console.error('Fetch Error:', error);
         setError('No se pudo cargar el archivo de satisfacción.');
         setLoading(false);
       }
@@ -81,7 +102,6 @@ export default function GraficosPage() {
         Error: {error}
       </div>
     );
-
   return (
     <div className="container mx-auto p-6">
       <div className="top-0 z-10 pb-4 flex items-center justify-center">
@@ -95,7 +115,7 @@ export default function GraficosPage() {
         </motion.h1>
       </div>
       <div className="min-h-screen flex flex-col bg-gray-100">
-        <div className="bg-white rounded-l shadow-lg overflow-hidden hover:shadow-xl duration-300 flex flex-col justify-between">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl duration-300 flex flex-col justify-between">
           <SatisfactionChart data={data} />
         </div>
       </div>

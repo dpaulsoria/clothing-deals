@@ -10,7 +10,7 @@ export const fakerUsers = () => {
   exportToCSV(users, 'users.csv');
 
   // Generar User Satisfaction basada en los usuarios generados
-  const userSatisfaction = generateUserSatisfaction(users, 50);
+  const userSatisfaction = generateUserSatisfaction(users, 5000); // Generar 5,000 registros
   exportToCSV(userSatisfaction, 'user_satisfaction.csv');
 };
 

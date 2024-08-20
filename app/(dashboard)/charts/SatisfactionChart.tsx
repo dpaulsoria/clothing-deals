@@ -19,37 +19,37 @@ ChartJS.register(
   Legend
 );
 
-interface UserSatisfactionData {
-  score: number;
-  count: number;
+interface SatisfactionByQuarter {
+  quarter: string;
+  averageScore: number;
 }
 
 interface SatisfactionChartProps {
-  data: UserSatisfactionData[];
+  data: SatisfactionByQuarter[];
 }
 
 const SatisfactionChart: React.FC<SatisfactionChartProps> = ({ data }) => {
   const chartData = {
-    labels: data.map((d) => `Score ${d.score}`),
+    labels: data.map((d) => d.quarter),
     datasets: [
       {
-        label: 'Número de Usuarios',
-        data: data.map((d) => d.count),
+        label: 'Promedio de Satisfacción',
+        data: data.map((d) => d.averageScore),
         backgroundColor: data.map(
           (d) =>
-            d.score >= 4
-              ? 'rgba(75, 192, 192, 0.7)' // Verde para puntajes altos
-              : d.score === 3
-                ? 'rgba(255, 205, 86, 0.7)' // Amarillo para puntajes medios
-                : 'rgba(255, 99, 132, 0.7)' // Rojo para puntajes bajos
+            d.averageScore >= 4.2
+              ? 'rgba(75, 192, 192, 0.7)' // Verde
+              : d.averageScore >= 3
+                ? 'rgba(255, 205, 86, 0.7)' // Amarillo
+                : 'rgba(255, 99, 132, 0.7)' // Rojo
         ),
         borderColor: data.map(
           (d) =>
-            d.score >= 4
-              ? 'rgba(75, 192, 192, 1)' // Verde para puntajes altos
-              : d.score === 3
-                ? 'rgba(255, 205, 86, 1)' // Amarillo para puntajes medios
-                : 'rgba(255, 99, 132, 1)' // Rojo para puntajes bajos
+            d.averageScore >= 4.2
+              ? 'rgba(75, 192, 192, 1)' // Verde
+              : d.averageScore >= 3
+                ? 'rgba(255, 205, 86, 1)' // Amarillo
+                : 'rgba(255, 99, 132, 1)' // Rojo
         ),
         borderWidth: 1,
       },
@@ -64,12 +64,13 @@ const SatisfactionChart: React.FC<SatisfactionChartProps> = ({ data }) => {
       },
       title: {
         display: true,
-        text: 'Distribución de Calificaciones de Satisfacción de Usuarios',
+        text: 'Promedio de Satisfacción del Usuario por Trimestre',
       },
     },
     scales: {
       y: {
         beginAtZero: true,
+        max: 5,
       },
     },
   };
