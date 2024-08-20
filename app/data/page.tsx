@@ -1,41 +1,80 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Papa from 'papaparse';
 import { motion } from 'framer-motion';
-import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
+import SatisfactionChart from '../(dashboard)/charts/SatisfactionChart';
+
+interface UserSatisfactionData {
+  id: string;
+  userId: string;
+  score: number;
+  createdAt: string;
+}
+
+interface UserSatisfactionGrouped {
+  score: number;
+  count: number;
+}
 
 export default function GraficosPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [data, setData] = useState<UserSatisfactionGrouped[]>([]);
 
-  const [page, setPage] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const limit = 10; // Número de elementos por página
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/fakerData/user_satisfaction.csv');
+        if (!response.ok) {
+          throw new Error('No se pudo cargar el archivo de satisfacción.');
+        }
 
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-  };
+        const csvData = await response.text();
+        Papa.parse<UserSatisfactionData>(csvData, {
+          header: true,
+          complete: (result) => {
+            const satisfactionData = result.data;
 
-  const handleNextPage = () => {
-    if (page * limit < totalItems) {
-      setPage((prevPage) => prevPage + 1);
-    }
-  };
+            // Agrupar los datos por `score` y contar las ocurrencias
+            const groupedData: { [key: number]: number } = {};
+            satisfactionData.forEach((item) => {
+              const score = item.score;
+              if (!groupedData[score]) {
+                groupedData[score] = 0;
+              }
+              groupedData[score] += 1;
+            });
 
-  const handlePreviousPage = () => {
-    if (page > 1) {
-      setPage((prevPage) => prevPage - 1);
-    }
-  };
+            const chartData = Object.keys(groupedData).map((score) => ({
+              score: parseInt(score),
+              count: groupedData[score],
+            }));
 
-  const totalPages = Math.ceil(totalItems / limit);
+            setData(chartData);
+            setLoading(false);
+          },
+          error: () => {
+            setError('No se pudo leer el archivo CSV.');
+            setLoading(false);
+          },
+        });
+      } catch (error) {
+        setError('No se pudo cargar el archivo de satisfacción.');
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   if (loading)
     return (
       <div className="flex items-center justify-center h-screen text-gray-700 bg-gray-100">
         Cargando estadísticas...
       </div>
     );
+
   if (error)
     return (
       <div className="flex items-center justify-center h-screen text-red-600 bg-gray-100">
@@ -52,27 +91,13 @@ export default function GraficosPage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          Gráficos Estadísticos Guardados
+          Gráfico de Satisfacción de Usuarios
         </motion.h1>
       </div>
-      <div className="flex justify-between items-center mt-4">
-        <button
-          onClick={handlePreviousPage}
-          disabled={page === 1}
-          className="flex items-center bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <FaArrowLeft className="mr-2" /> Anterior
-        </button>
-        <span className="text-gray-600">
-          Página {page} de {totalPages}
-        </span>
-        <button
-          onClick={handleNextPage}
-          disabled={page === totalPages}
-          className="flex items-center bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Siguiente <FaArrowRight className="ml-2" />
-        </button>
+      <div className="min-h-screen flex flex-col bg-gray-100">
+        <div className="bg-white rounded-l shadow-lg overflow-hidden hover:shadow-xl duration-300 flex flex-col justify-between">
+          <SatisfactionChart data={data} />
+        </div>
       </div>
     </div>
   );
