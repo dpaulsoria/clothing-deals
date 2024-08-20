@@ -1,7 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { v4 as uuidv4 } from 'uuid';
+import { Store } from '@components/faker/store';
 
-interface StoreSatisfaction {
+export interface StoreSatisfaction {
   id: string;
   storeId: string;
   aspect: string;
@@ -9,7 +10,7 @@ interface StoreSatisfaction {
   createdAt: Date;
 }
 
-const generateStoreSatisfaction = (
+export const generateStoreSatisfaction = (
   stores: Store[],
   count: number
 ): StoreSatisfaction[] => {

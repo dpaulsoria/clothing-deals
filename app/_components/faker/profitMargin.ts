@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { v4 as uuidv4 } from 'uuid';
 
-interface ProfitMargin {
+export interface ProfitMargin {
   id: string;
   actualMargin: number;
   targetMargin: number;
@@ -10,7 +10,7 @@ interface ProfitMargin {
   createdAt: Date;
 }
 
-const generateProfitMargins = (count: number): ProfitMargin[] => {
+export const generateProfitMargins = (count: number): ProfitMargin[] => {
   return Array.from({ length: count }).map(() => {
     const targetMargin = faker.datatype.number({ min: 10, max: 30 });
     const actualMargin = faker.datatype.number({ min: 5, max: 35 });

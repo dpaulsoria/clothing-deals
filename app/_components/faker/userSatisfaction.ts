@@ -1,15 +1,16 @@
 import { faker } from '@faker-js/faker';
 import { v4 as uuidv4 } from 'uuid';
-import { User } from './user';
+import { generateUsers, User } from './user';
+import { exportToCSV } from '@components/papaExport';
 
-interface UserSatisfaction {
+export interface UserSatisfaction {
   id: string;
   userId: string;
   score: number;
   createdAt: Date;
 }
 
-const generateUserSatisfaction = (
+export const generateUserSatisfaction = (
   users: User[],
   count: number
 ): UserSatisfaction[] => {

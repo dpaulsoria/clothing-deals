@@ -1,5 +1,9 @@
 'use client';
-import type { Metadata } from 'next';
+import {
+  fakerUsers,
+  fakerProfitMargins,
+  fakerStores,
+} from '@components/faker/genall';
 import { Inter } from 'next/font/google';
 import './_lib/fontAwesome';
 import './globals.css';
@@ -24,6 +28,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname: string = usePathname();
+  const handleGenerateData = () => {
+    fakerUsers();
+    fakerProfitMargins();
+    fakerStores();
+    alert('Datos generados y exportados exitosamente.');
+  };
   return (
     <html lang="en">
       <body className={inter.className}>
@@ -37,6 +47,13 @@ export default function RootLayout({
               >
                 <GalapagosIcon className="fill-indigo-800" />
               </Link>
+              {/* Botón para generar los datos */}
+              <button
+                onClick={handleGenerateData}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              >
+                Generar Datos
+              </button>
               <nav className="flex items-center gap-6">
                 <Link
                   href="/about"
@@ -49,6 +66,12 @@ export default function RootLayout({
                   className="text-gray-700 hover:text-blue-600"
                 >
                   Datos
+                </Link>
+                <Link
+                  href="/stores"
+                  className="text-gray-700 hover:text-blue-600"
+                >
+                  Tiendas
                 </Link>
                 <Link
                   href="/login"
