@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { MapService } from '@/app/services/map.service';
-import { Statistics } from '@db/models/statistic.model';
 import { motion } from 'framer-motion';
 import { FaChartBar, FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 
@@ -43,28 +42,8 @@ export default function GraficosPage() {
     }
   }, [user_id, page, limit]);
 
-  useEffect(() => {
-    fetchStatistics();
-  }, [fetchStatistics]);
-
-  const handleStatisticClick = (statistic: Statistics) => {
-    setSelectedStatistic(statistic);
-    setNewName(statistic.name);
-    setIsModalOpen(true);
-  };
-
   const handleModalClose = () => {
     setIsModalOpen(false);
-    setSelectedStatistic(null);
-  };
-
-  const handleUpdateStatistic = async () => {
-    if (selectedStatistic) {
-      const updatedStatistic = { ...selectedStatistic, name: newName };
-      await MapService.updateStatistics(updatedStatistic);
-      fetchStatistics();
-      handleModalClose();
-    }
   };
 
   const handleNextPage = () => {
