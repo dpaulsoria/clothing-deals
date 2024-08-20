@@ -50,30 +50,6 @@ export default function Home() {
 
     // </main>
     <div className="flex flex-col min-h-screen text-gray-900">
-      {/* Header */}
-      <header className="bg-white shadow-md">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <GalapagosIcon className="fill-indigo-800" />
-          <nav className="flex items-center gap-6">
-            <Link href="/about" className="text-gray-700 hover:text-blue-600">
-              Acerca de
-            </Link>
-            <Link href="/maps" className="text-gray-700 hover:text-blue-600">
-              Mapas
-            </Link>
-            <Link href="/data" className="text-gray-700 hover:text-blue-600">
-              Datos
-            </Link>
-            <Link
-              href="/login"
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              Iniciar Sesión
-            </Link>
-          </nav>
-        </div>
-      </header>
-
       {/* Hero Section */}
       <section className="bg-blue-50 min-h-[calc(100vh-4rem)] flex items-center ">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center">
