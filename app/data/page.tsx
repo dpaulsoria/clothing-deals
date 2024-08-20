@@ -6,13 +6,13 @@ import { motion } from 'framer-motion';
 import { FaChartBar, FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 
 export default function GraficosPage() {
-  const [statistics, setStatistics] = useState<Statistics[]>([]);
+  // const [statistics, setStatistics] = useState<Statistics[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedStatistic, setSelectedStatistic] = useState<Statistics | null>(
-    null
-  );
+  // const [selectedStatistic, setSelectedStatistic] = useState<Statistics | null>(
+  //   null
+  // );
   const [newName, setNewName] = useState('');
   const [page, setPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
