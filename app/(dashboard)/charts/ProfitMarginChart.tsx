@@ -14,8 +14,9 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import ExportPDFModal from '@/app/(dashboard)/charts/ExportPDFModal';
+import { ProfitMargin } from '@components/faker/profitMargin';
 
 ChartJS.register(
   CategoryScale,
@@ -28,21 +29,13 @@ ChartJS.register(
   Legend
 );
 
-export interface ProfitMargin {
-  month: string;
-  year: string;
-  actualMargin: number;
-  targetMargin: number;
-  deviation: number;
-  createdAt: Date;
-}
-
 const ProfitMarginChart: React.FC = () => {
   const [data, setData] = useState<ProfitMargin[]>([]);
   const [filteredData, setFilteredData] = useState<ProfitMargin[]>([]);
   const [showQuarters, setShowQuarters] = useState(false);
   const [selectedYear, setSelectedYear] = useState<string>('2024');
   const [availableYears, setAvailableYears] = useState<string[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -230,33 +223,6 @@ const ProfitMarginChart: React.FC = () => {
     },
   };
 
-  const handleExportPDF = () => {
-    const chartElement = document.getElementById('profit-margin-chart');
-    if (chartElement) {
-      html2canvas(chartElement).then((canvas) => {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF();
-        const imgWidth = 190;
-        const pageHeight = pdf.internal.pageSize.height;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        let heightLeft = imgHeight;
-        let position = 10;
-
-        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-
-        while (heightLeft >= 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-        }
-
-        pdf.save('profit_margin_chart.pdf');
-      });
-    }
-  };
-
   const handleExportImage = () => {
     const chartElement = document.getElementById('profit-margin-chart');
     if (chartElement) {
@@ -297,7 +263,7 @@ const ProfitMarginChart: React.FC = () => {
       <div className="flex justify-center mt-4 gap-4">
         <button
           className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-          onClick={handleExportPDF}
+          onClick={() => setIsModalOpen(true)}
         >
           Exportar a PDF
         </button>
@@ -308,6 +274,11 @@ const ProfitMarginChart: React.FC = () => {
           Exportar como Imagen
         </button>
       </div>
+      <ExportPDFModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        data={data}
+      />
     </div>
   );
 };
