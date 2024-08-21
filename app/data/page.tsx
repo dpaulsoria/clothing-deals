@@ -2,11 +2,39 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import SatisfactionChart from '../(dashboard)/charts/SatisfactionChart';
-import ProfitMarginChart from '../(dashboard)/charts/ProfitMarginChart';
-import StoreChart from '../(dashboard)/charts/StoreChart';
-import StoreSatisfactionChart from '@/app/(dashboard)/charts/StoreSatisfactionChart';
-import KPIIndicators from '@/app/(dashboard)/charts/kpiIndicators';
+
+import dynamic from 'next/dynamic';
+
+const KPIIndicators = dynamic(
+  () => import('../(dashboard)/charts/kpiIndicators'),
+  {
+    ssr: false,
+  }
+);
+
+const SatisfactionChart = dynamic(
+  () => import('../(dashboard)/charts/SatisfactionChart'),
+  {
+    ssr: false,
+  }
+);
+const ProfitMarginChart = dynamic(
+  () => import('../(dashboard)/charts/ProfitMarginChart'),
+  {
+    ssr: false,
+  }
+);
+
+const StoreChart = dynamic(() => import('../(dashboard)/charts/StoreChart'), {
+  ssr: false,
+});
+
+const StoreSatisfactionChart = dynamic(
+  () => import('../(dashboard)/charts/StoreSatisfactionChart'),
+  {
+    ssr: false,
+  }
+);
 
 export default function GraficosPage() {
   const [activeTab, setActiveTab] = useState<'charts' | 'kpis'>('charts');
