@@ -3,67 +3,66 @@
 import React, { useState } from 'react';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { ProfitMargin } from '@components/faker/profitMargin';
 
-interface ExportPDFModalProps {
+interface ExportPDFModalProps<T> {
   isOpen: boolean;
   onClose: () => void;
-  data: ProfitMargin[];
+  data: T[];
+  columns: { header: string; key: string }[];
+  title: string;
+  companyName?: string;
+  omittedColumns?: string[]; // Prop para definir columnas a omitir
 }
 
-const ExportPDFModal: React.FC<ExportPDFModalProps> = ({
+const ExportPDFModal = <T,>({
   isOpen,
   onClose,
   data,
-}) => {
+  columns,
+  title,
+  companyName = 'CLOTHING DEALS',
+  omittedColumns = [],
+}: ExportPDFModalProps<T>) => {
   const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [selectedYear, setSelectedYear] = useState<string>('2024');
 
-  const availableMonths = Array.from(new Set(data.map((d) => d.month)));
-  const availableYears = Array.from(new Set(data.map((d) => d.year)));
+  const availableMonths = Array.from(
+    new Set(data.map((d) => d['month' as keyof T] as string))
+  );
+  const availableYears = Array.from(
+    new Set(data.map((d) => d['year' as keyof T] as string))
+  );
 
   const handleExportPDF = () => {
     const filteredData = data.filter(
-      (item) => item.month === selectedMonth && item.year === selectedYear
+      (item) =>
+        (item['month' as keyof T] as string) === selectedMonth &&
+        (item['year' as keyof T] as string) === selectedYear
+    );
+
+    // Filtrar las columnas que no están en omittedColumns
+    const filteredColumns = columns.filter(
+      (col) => !omittedColumns.includes(col.key as string)
     );
 
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text('CLOTHING DEALS', 14, 22);
+    doc.text(companyName, 14, 22);
     doc.setFontSize(12);
-    doc.text(
-      `Reporte de Margen de Beneficio (${selectedMonth} ${selectedYear})`,
-      14,
-      32
+    doc.text(`${title} (${selectedMonth} ${selectedYear})`, 14, 32);
+
+    const tableRows: string[][] = filteredData.map((item) =>
+      filteredColumns.map((col) => String(item[col.key]))
     );
 
-    const tableColumn = [
-      'Actual Margin (%)',
-      'Target Margin (%)',
-      'Deviation (%)',
-      'Created At',
-    ];
-    const tableRows: string[][] = [];
-
-    filteredData.forEach((item) => {
-      const rowData = [
-        item.actualMargin.toFixed(2),
-        item.targetMargin.toFixed(2),
-        item.deviation.toFixed(2),
-        new Date(item.createdAt).toLocaleDateString(),
-      ];
-      tableRows.push(rowData);
-    });
-
-    // Usar autoTable para crear la tabla en el PDF
     (doc as any).autoTable({
-      head: [tableColumn],
+      head: [filteredColumns.map((col) => col.header)],
       body: tableRows,
       startY: 40,
     });
 
     doc.save(
-      `CLOTHING_DEALS_Profit_Margin_${selectedMonth}_${selectedYear}.pdf`
+      `${companyName.replace(/\s+/g, '_')}_${title.replace(/\s+/g, '_')}_${selectedMonth}_${selectedYear}.pdf`
     );
   };
 
@@ -71,9 +70,7 @@ const ExportPDFModal: React.FC<ExportPDFModalProps> = ({
     isOpen && (
       <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
         <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-          <h2 className="text-xl font-semibold mb-4">
-            Exportar Reporte de Margen de Beneficio
-          </h2>
+          <h2 className="text-xl font-semibold mb-4">{`Exportar ${title}`}</h2>
           <div className="mb-4">
             <label htmlFor="year-select" className="block text-gray-700">
               Año:

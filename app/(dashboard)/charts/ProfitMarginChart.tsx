@@ -29,6 +29,16 @@ ChartJS.register(
   Legend
 );
 
+const profitMarginColumns = [
+  { header: 'ID', key: 'id' },
+  { header: 'Actual Margin (%)', key: 'actualMargin' },
+  { header: 'Target Margin (%)', key: 'targetMargin' },
+  { header: 'Deviation (%)', key: 'deviation' },
+  { header: 'Month', key: 'month' },
+  { header: 'Year', key: 'year' },
+  { header: 'Created At', key: 'createdAt' },
+];
+
 const ProfitMarginChart: React.FC = () => {
   const [data, setData] = useState<ProfitMargin[]>([]);
   const [filteredData, setFilteredData] = useState<ProfitMargin[]>([]);
@@ -234,6 +244,8 @@ const ProfitMarginChart: React.FC = () => {
       });
     }
   };
+  // Definir las columnas a omitir
+  const omittedColumns = ['id', 'createdAt'];
 
   return (
     <div className="container mx-auto p-6" id="profit-margin-chart">
@@ -278,6 +290,10 @@ const ProfitMarginChart: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         data={data}
+        columns={profitMarginColumns}
+        title="Profit Margin Report"
+        companyName="CLOTHING DEALS"
+        omittedColumns={omittedColumns} // Pasamos las columnas a omitir al modal
       />
     </div>
   );
