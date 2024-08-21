@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
 import { motion } from 'framer-motion';
 import SatisfactionChart from '../(dashboard)/charts/SatisfactionChart';
+import ProfitMarginChart from '../(dashboard)/charts/ProfitMarginChart';
+import { ProfitMargin } from '@components/faker/profitMargin';
 
 interface UserSatisfactionData {
   id: string;
@@ -20,11 +22,14 @@ export interface SatisfactionData {
 export default function GraficosPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<SatisfactionData[]>([]);
-  const [showQuarters, setShowQuarters] = useState(false); // Variable para controlar la visualización
+  const [satisfactionData, setSatisfactionData] = useState<SatisfactionData[]>(
+    []
+  );
+  const [profitMarginData, setProfitMarginData] = useState<ProfitMargin[]>([]);
+  const [showQuarters, setShowQuarters] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchSatisfactionData = async () => {
       try {
         const response = await fetch('/fakerData/user_satisfaction.csv');
         if (!response.ok) {
@@ -38,7 +43,6 @@ export default function GraficosPage() {
           complete: (result) => {
             const satisfactionData = result.data;
 
-            // Agrupar los datos por trimestre o por mes según la variable showQuarters
             const groupedData: { [key: string]: number[] } = {};
 
             satisfactionData.forEach((item) => {
@@ -47,14 +51,10 @@ export default function GraficosPage() {
                 ? `Q${Math.ceil((date.getMonth() + 1) / 3)} ${date.getFullYear()}`
                 : `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
 
-              // Si el grupo no existe en el conjunto, lo creamos
               if (!groupedData[groupKey]) groupedData[groupKey] = [];
-
-              // Almacenar el puntaje en el grupo correspondiente
               groupedData[groupKey].push(Number(item.score));
             });
 
-            // Calcular el promedio por grupo (trimestre o mes)
             const averagedData: SatisfactionData[] = Object.keys(
               groupedData
             ).map((groupKey) => {
@@ -67,7 +67,7 @@ export default function GraficosPage() {
               return { quarter: groupKey, averageScore };
             });
 
-            setData(averagedData);
+            setSatisfactionData(averagedData);
             setLoading(false);
           },
           error: () => {
@@ -82,8 +82,38 @@ export default function GraficosPage() {
       }
     };
 
-    fetchData();
-  }, [showQuarters]); // Dependencia de showQuarters para recargar los datos
+    const fetchProfitMarginData = async () => {
+      try {
+        const response = await fetch('/fakerData/profit_margins.csv');
+        if (!response.ok) {
+          throw new Error(
+            'No se pudo cargar el archivo de márgenes de beneficio.'
+          );
+        }
+
+        const csvData = await response.text();
+
+        Papa.parse<ProfitMargin>(csvData, {
+          header: true,
+          complete: (result) => {
+            setProfitMarginData(result.data);
+            setLoading(false);
+          },
+          error: () => {
+            setError('No se pudo leer el archivo CSV.');
+            setLoading(false);
+          },
+        });
+      } catch (error) {
+        console.error('Fetch Error:', error);
+        setError('No se pudo cargar el archivo de márgenes de beneficio.');
+        setLoading(false);
+      }
+    };
+
+    fetchSatisfactionData();
+    fetchProfitMarginData();
+  }, [showQuarters]);
 
   if (loading)
     return (
@@ -108,20 +138,41 @@ export default function GraficosPage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          Gráfico de Satisfacción de Usuarios
+          Gráficos Estadísticos
         </motion.h1>
       </div>
       <div className="min-h-screen flex flex-col bg-gray-100">
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl duration-300 flex flex-col justify-between">
-          <SatisfactionChart data={data} />
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl duration-300 flex flex-col justify-between mb-6">
+          <h2 className="text-2xl font-semibold text-center text-indigo-600 mt-6">
+            Satisfacción de Usuarios
+          </h2>
+          <SatisfactionChart data={satisfactionData} />
+          <div className="flex justify-center mt-4 mb-6">
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+              onClick={() => setShowQuarters(!showQuarters)}
+            >
+              {showQuarters ? 'Mostrar por Meses' : 'Mostrar por Trimestres'}
+            </button>
+          </div>
         </div>
-        <div className="flex justify-center mt-4">
-          <button
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-            onClick={() => setShowQuarters(!showQuarters)}
-          >
-            {showQuarters ? 'Mostrar por Meses' : 'Mostrar por Trimestres'}
-          </button>
+
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl duration-300 flex flex-col justify-between">
+          <h2 className="text-2xl font-semibold text-center text-indigo-600 mt-6">
+            Margen de Beneficio y Desviación
+          </h2>
+          <ProfitMarginChart
+            data={profitMarginData}
+            showQuarters={showQuarters}
+          />
+          <div className="flex justify-center mt-4 mb-6">
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+              onClick={() => setShowQuarters(!showQuarters)}
+            >
+              {showQuarters ? 'Mostrar por Meses' : 'Mostrar por Trimestres'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

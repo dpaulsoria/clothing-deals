@@ -1,45 +1,68 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { Chart } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
   LineElement,
+  PointElement,
   Title,
   Tooltip,
   Legend,
 } from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+import { ProfitMargin } from '@components/faker/profitMargin';
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
   LineElement,
+  PointElement,
   Title,
   Tooltip,
   Legend
 );
 
-interface ProfitMarginData {
-  quarter: string;
-  realMargin: number;
-  targetMargin: number;
-  deviation: number; // Positivo o negativo
-}
-
 interface ProfitMarginChartProps {
-  data: ProfitMarginData[];
+  data: ProfitMargin[];
+  showQuarters: boolean; // Propiedad para controlar la visualización por trimestre o mes
 }
 
-const ProfitMarginChart: React.FC<ProfitMarginChartProps> = ({ data }) => {
+const ProfitMarginChart: React.FC<ProfitMarginChartProps> = ({
+  data,
+  showQuarters,
+}) => {
+  const groupedData = data.reduce<{ [key: string]: ProfitMargin[] }>(
+    (acc, item) => {
+      const groupKey = showQuarters
+        ? item.quarter
+        : new Date(item.createdAt).toLocaleString('default', {
+            month: 'short',
+            year: 'numeric',
+          });
+
+      if (!acc[groupKey]) acc[groupKey] = [];
+      acc[groupKey].push(item);
+
+      return acc;
+    },
+    {}
+  );
+
   const chartData = {
-    labels: data.map((d) => d.quarter),
+    labels: Object.keys(groupedData),
     datasets: [
       {
         type: 'bar' as const,
         label: 'Margen Real (%)',
-        data: data.map((d) => d.realMargin),
+        data: Object.keys(groupedData).map(
+          (key) =>
+            groupedData[key].reduce((sum, item) => sum + item.actualMargin, 0) /
+            groupedData[key].length
+        ),
         backgroundColor: 'rgba(54, 162, 235, 0.7)',
         borderColor: 'rgba(54, 162, 235, 1)',
         borderWidth: 1,
@@ -48,7 +71,11 @@ const ProfitMarginChart: React.FC<ProfitMarginChartProps> = ({ data }) => {
       {
         type: 'bar' as const,
         label: 'Margen Objetivo (%)',
-        data: data.map((d) => d.targetMargin),
+        data: Object.keys(groupedData).map(
+          (key) =>
+            groupedData[key].reduce((sum, item) => sum + item.targetMargin, 0) /
+            groupedData[key].length
+        ),
         backgroundColor: 'rgba(75, 192, 192, 0.7)',
         borderColor: 'rgba(75, 192, 192, 1)',
         borderWidth: 1,
@@ -57,9 +84,17 @@ const ProfitMarginChart: React.FC<ProfitMarginChartProps> = ({ data }) => {
       {
         type: 'line' as const,
         label: 'Desviación (%)',
-        data: data.map((d) => d.deviation),
-        borderColor: data.map((d) =>
-          d.deviation >= 0 ? 'rgba(75, 192, 192, 1)' : 'rgba(255, 99, 132, 1)'
+        data: Object.keys(groupedData).map(
+          (key) =>
+            groupedData[key].reduce((sum, item) => sum + item.deviation, 0) /
+            groupedData[key].length
+        ),
+        borderColor: Object.keys(groupedData).map((key) =>
+          groupedData[key].reduce((sum, item) => sum + item.deviation, 0) /
+            groupedData[key].length >=
+          0
+            ? 'rgba(75, 192, 192, 1)'
+            : 'rgba(255, 99, 132, 1)'
         ),
         borderWidth: 2,
         fill: false,
@@ -105,7 +140,7 @@ const ProfitMarginChart: React.FC<ProfitMarginChartProps> = ({ data }) => {
     },
   };
 
-  return <Bar data={chartData} options={options} />;
+  return <Chart type="bar" data={chartData} options={options} />;
 };
 
 export default ProfitMarginChart;
