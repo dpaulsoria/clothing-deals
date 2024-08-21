@@ -59,7 +59,7 @@ const StoreSatisfactionChart: React.FC = () => {
           complete: (result) => {
             const satisfactionData = result.data;
 
-            const groupedData: { [key: string]: number[] } = {};
+            const groupedData: { [aspect: string]: number[] } = {};
             const years: Set<string> = new Set();
 
             satisfactionData.forEach((item) => {
@@ -67,9 +67,7 @@ const StoreSatisfactionChart: React.FC = () => {
               const year = date.getFullYear().toString();
               years.add(year);
 
-              const groupKey = showQuarters
-                ? `Q${Math.ceil((date.getMonth() + 1) / 3)} ${year}`
-                : `${date.toLocaleString('default', { month: 'short' })} ${year}`;
+              if (selectedYear && year !== selectedYear) return; // Filtra por año seleccionado
 
               if (!groupedData[item.aspect]) {
                 groupedData[item.aspect] = [];
@@ -77,35 +75,24 @@ const StoreSatisfactionChart: React.FC = () => {
               groupedData[item.aspect].push(Number(item.score));
             });
 
-            const filteredData = selectedYear
-              ? Object.keys(groupedData)
-                  .filter((key) => key.includes(selectedYear))
-                  .reduce(
-                    (acc, key) => {
-                      acc[key] = groupedData[key];
-                      return acc;
-                    },
-                    {} as { [key: string]: number[] }
-                  )
-              : groupedData;
+            const averagedData: RadarChartData[] = Object.keys(groupedData).map(
+              (aspect) => {
+                const scores = groupedData[aspect];
+                const totalScores = scores.length;
+                const averageScore =
+                  totalScores > 0
+                    ? scores.reduce((sum, score) => sum + score, 0) /
+                      totalScores
+                    : 0;
 
-            const averagedData: RadarChartData[] = Object.keys(
-              filteredData
-            ).map((aspect) => {
-              const scores = filteredData[aspect];
-              const totalScores = scores.length;
-              const averageScore =
-                totalScores > 0
-                  ? scores.reduce((sum, score) => sum + score, 0) / totalScores
-                  : 0;
-
-              return { aspect, averageScore };
-            });
+                return { aspect, averageScore };
+              }
+            );
 
             const trend = averagedData.map((data) => data.averageScore);
             setTrendData(trend);
             setData(averagedData);
-            setAvailableYears(Array.from(years));
+            setAvailableYears(Array.from(years).sort());
           },
           error: () => {
             console.error('No se pudo leer el archivo CSV.');
@@ -212,6 +199,7 @@ const StoreSatisfactionChart: React.FC = () => {
       },
     },
   };
+
   return (
     <div className="container mx-auto p-6">
       <div
@@ -233,12 +221,12 @@ const StoreSatisfactionChart: React.FC = () => {
             </option>
           ))}
         </select>
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-          onClick={() => setShowQuarters(!showQuarters)}
-        >
-          {showQuarters ? 'Mostrar por Meses' : 'Mostrar por Trimestres'}
-        </button>
+        {/*<button*/}
+        {/*  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 transition"*/}
+        {/*  onClick={() => setShowQuarters(!showQuarters)}*/}
+        {/*>*/}
+        {/*  {showQuarters ? 'Mostrar por Meses' : 'Mostrar por Trimestres'}*/}
+        {/*</button>*/}
       </div>
       <div className="flex justify-center mt-4 gap-4">
         <button

@@ -24,6 +24,6 @@ export const fakerStores = () => {
   exportToCSV(stores, 'stores.csv');
 
   // Generar Store Satisfaction basada en las tiendas generadas
-  const storeSatisfaction = generateStoreSatisfaction(stores, 200);
+  const storeSatisfaction = generateStoreSatisfaction(stores, 5000);
   exportToCSV(storeSatisfaction, 'store_satisfaction.csv');
 };
