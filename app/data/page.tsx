@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import SatisfactionChart from '../(dashboard)/charts/SatisfactionChart';
+import ProfitMarginChart from '@/app/(dashboard)/charts/ProfitMarginChart';
 
 export default function GraficosPage() {
   return (
@@ -22,9 +23,16 @@ export default function GraficosPage() {
         {/* Componente SatisfactionChart */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl duration-300 flex flex-col justify-between mb-6 max-w-full">
           <h2 className="text-2xl font-semibold text-center text-indigo-600 mt-6">
-            Satisfacción de Usuarios
+            User Satisfaction Chart
           </h2>
           <SatisfactionChart />
+        </div>
+        {/* Componente de Margin Profit Chart*/}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl duration-300 flex flex-col justify-between mb-6 max-w-full">
+          <h2 className="text-2xl font-semibold text-center text-indigo-600 mt-6">
+            Margin Profit Chart
+          </h2>
+          <ProfitMarginChart />
         </div>
       </div>
     </div>
