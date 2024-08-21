@@ -59,10 +59,7 @@ export default function RootLayout({
                 >
                   Acerca de
                 </Link>
-                <Link
-                  href="/data"
-                  className="text-gray-700 hover:text-blue-600"
-                >
+                <Link href="/" className="text-gray-700 hover:text-blue-600">
                   Dashboard
                 </Link>
                 {/*<Link*/}
