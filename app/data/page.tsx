@@ -6,7 +6,7 @@ import SatisfactionChart from '../(dashboard)/charts/SatisfactionChart';
 import ProfitMarginChart from '../(dashboard)/charts/ProfitMarginChart';
 import StoreChart from '../(dashboard)/charts/StoreChart';
 import StoreSatisfactionChart from '@/app/(dashboard)/charts/StoreSatisfactionChart';
-import KPIIndicators from '@/app/(dashboard)/charts/kpiIndicators'; // Importa tu componente KPIIndicators
+import KPIIndicators from '@/app/(dashboard)/charts/kpiIndicators';
 
 export default function GraficosPage() {
   const [activeTab, setActiveTab] = useState<'charts' | 'kpis'>('charts');
@@ -81,7 +81,7 @@ export default function GraficosPage() {
 
       {activeTab === 'kpis' && (
         <div>
-          <KPIIndicators /> {/* Componente KPIIndicators */}
+          <KPIIndicators />
         </div>
       )}
     </div>
