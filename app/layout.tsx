@@ -8,8 +8,6 @@ import { Inter } from 'next/font/google';
 import './_lib/fontAwesome';
 import './globals.css';
 import { ThemeProvider } from './ThemeContext';
-import 'leaflet/dist/leaflet.css';
-import 'leaflet-draw/dist/leaflet.draw.css';
 import GalapagosIcon from './_components/icons/GalapagosIcon';
 import Link from 'next/link';
 import React from 'react';

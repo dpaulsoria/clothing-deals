@@ -24,6 +24,6 @@ export const generateStoreSatisfaction = (
       'rendimiento de ventas',
     ]),
     score: faker.datatype.number({ min: 1, max: 5 }),
-    createdAt: faker.date.recent(),
+    createdAt: faker.date.between('2020-01-01', '2024-12-31'),
   }));
 };

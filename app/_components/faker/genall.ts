@@ -10,12 +10,12 @@ export const fakerUsers = () => {
   exportToCSV(users, 'users.csv');
 
   // Generar User Satisfaction basada en los usuarios generados
-  const userSatisfaction = generateUserSatisfaction(users, 5000); // Generar 5,000 registros
+  const userSatisfaction = generateUserSatisfaction(users, 5000);
   exportToCSV(userSatisfaction, 'user_satisfaction.csv');
 };
 
 export const fakerProfitMargins = () => {
-  const profitMargins = generateProfitMargins(4);
+  const profitMargins = generateProfitMargins(16); // 16 quarters in 4 years
   exportToCSV(profitMargins, 'profit_margins.csv');
 };
 

@@ -12,7 +12,7 @@ export const generateStores = (count: number): Store[] => {
   return Array.from({ length: count }).map(() => ({
     id: uuidv4(),
     name: faker.company.name(),
-    joinedDate: faker.date.past(),
+    joinedDate: faker.date.between('2020-01-01', '2024-12-31'),
     marketingTechnique: faker.helpers.arrayElement([
       'SEO',
       'Social Media',

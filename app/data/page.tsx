@@ -6,7 +6,6 @@ import SatisfactionChart from '../(dashboard)/charts/SatisfactionChart';
 import ProfitMarginChart from '../(dashboard)/charts/ProfitMarginChart';
 import StoreChart from '../(dashboard)/charts/StoreChart';
 import StoreSatisfactionChart from '@/app/(dashboard)/charts/StoreSatisfactionChart';
-import Store4Chart from '@/app/(dashboard)/charts/Store4Chart';
 
 const chartClassName =
   'bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl duration-300 flex flex-col justify-between mb-6 max-w-full';
@@ -49,12 +48,6 @@ export default function GraficosPage() {
         <div className={chartClassName}>
           <h2 className={h2ClassName}>Store Satisfaction Chart</h2>
           <StoreSatisfactionChart />
-        </div>
-
-        {/* Componente de Store 4 Chart */}
-        <div className={chartClassName}>
-          <h2 className={h2ClassName}>Store 4 Chart</h2>
-          <Store4Chart />
         </div>
       </div>
     </div>

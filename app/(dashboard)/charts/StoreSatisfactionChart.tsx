@@ -12,6 +12,8 @@ import {
   Legend,
 } from 'chart.js';
 import Papa from 'papaparse';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 ChartJS.register(
   RadialLinearScale,
@@ -36,6 +38,9 @@ interface RadarChartData {
 const StoreSatisfactionChart: React.FC = () => {
   const [data, setData] = useState<RadarChartData[]>([]);
   const [trendData, setTrendData] = useState<number[]>([]);
+  const [selectedYear, setSelectedYear] = useState<string | null>(null);
+  const [availableYears, setAvailableYears] = useState<string[]>([]);
+  const [showQuarters, setShowQuarters] = useState(false);
 
   useEffect(() => {
     const fetchStoreSatisfactionData = async () => {
@@ -55,12 +60,28 @@ const StoreSatisfactionChart: React.FC = () => {
             const satisfactionData = result.data;
 
             const groupedData: { [key: string]: number[] } = {};
+            const years: Set<string> = new Set();
+
             satisfactionData.forEach((item) => {
+              const date = new Date(item.createdAt);
+              const year = date.getFullYear().toString();
+              years.add(year);
+
+              const groupKey = showQuarters
+                ? `Q${Math.ceil((date.getMonth() + 1) / 3)} ${year}`
+                : `${date.toLocaleString('default', { month: 'short' })} ${year}`;
+
               if (!groupedData[item.aspect]) {
                 groupedData[item.aspect] = [];
               }
               groupedData[item.aspect].push(Number(item.score));
             });
+
+            const filteredData = selectedYear
+              ? satisfactionData.filter((item) =>
+                  item.createdAt.includes(selectedYear)
+                )
+              : satisfactionData;
 
             const averagedData: RadarChartData[] = Object.keys(groupedData).map(
               (aspect) => {
@@ -78,8 +99,8 @@ const StoreSatisfactionChart: React.FC = () => {
 
             const trend = averagedData.map((data) => data.averageScore);
             setTrendData(trend);
-
             setData(averagedData);
+            setAvailableYears(Array.from(years));
           },
           error: () => {
             console.error('No se pudo leer el archivo CSV.');
@@ -91,7 +112,46 @@ const StoreSatisfactionChart: React.FC = () => {
     };
 
     fetchStoreSatisfactionData();
-  }, []);
+  }, [selectedYear, showQuarters]);
+
+  const handleExportPDF = () => {
+    const chartElement = document.getElementById('store-satisfaction-chart');
+    if (chartElement) {
+      html2canvas(chartElement).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF();
+        const imgWidth = 190;
+        const pageHeight = pdf.internal.pageSize.height;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 10;
+
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+
+        pdf.save('store_satisfaction_chart.pdf');
+      });
+    }
+  };
+
+  const handleExportImage = () => {
+    const chartElement = document.getElementById('store-satisfaction-chart');
+    if (chartElement) {
+      html2canvas(chartElement).then((canvas) => {
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        link.download = 'store_satisfaction_chart.png';
+        link.click();
+      });
+    }
+  };
 
   const chartData = {
     labels: data.map((d) => d.aspect),
@@ -137,7 +197,7 @@ const StoreSatisfactionChart: React.FC = () => {
       r: {
         ticks: {
           beginAtZero: true,
-          max: 5, // Ajustar el máximo a 5, que es el valor esperado
+          max: 5,
         },
         pointLabels: {
           font: {
@@ -148,7 +208,47 @@ const StoreSatisfactionChart: React.FC = () => {
     },
   };
 
-  return <Radar data={chartData} options={options} />;
+  return (
+    <div className="container mx-auto p-6" id="store-satisfaction-chart">
+      <div className="top-0 z-10 pb-4 flex items-center justify-center">
+        <Radar data={chartData} options={options} />
+      </div>
+      <div className="flex justify-center mt-4 gap-4">
+        <select
+          className="bg-gray-200 text-gray-700 p-2 rounded"
+          value={selectedYear || ''}
+          onChange={(e) => setSelectedYear(e.target.value || null)}
+        >
+          <option value="">Seleccionar Año</option>
+          {availableYears.map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+          onClick={() => setShowQuarters(!showQuarters)}
+        >
+          {showQuarters ? 'Mostrar por Meses' : 'Mostrar por Trimestres'}
+        </button>
+      </div>
+      <div className="flex justify-center mt-4 gap-4">
+        <button
+          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+          onClick={handleExportPDF}
+        >
+          Exportar a PDF
+        </button>
+        <button
+          className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-700 transition"
+          onClick={handleExportImage}
+        >
+          Exportar como Imagen
+        </button>
+      </div>
+    </div>
+  );
 };
 
 export default StoreSatisfactionChart;

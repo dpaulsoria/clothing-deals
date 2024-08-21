@@ -18,17 +18,7 @@ export const generateUsers = (count: number): User[] => {
     name: faker.name.fullName(),
     email: faker.internet.email(),
     role: faker.helpers.arrayElement(['admin', 'user']),
-    createdAt: faker.date.past(),
+    createdAt: faker.date.between('2020-01-01', '2024-12-31'),
     updatedAt: faker.date.recent(),
   }));
-};
-
-// Funciones Faker para exportar los datos a CSV
-export const fakerUsers = () => {
-  const users = generateUsers(10);
-  exportToCSV(users, 'fakerData/users.csv');
-
-  // Generar User Satisfaction basada en los usuarios generados
-  const userSatisfaction = generateUserSatisfaction(users, 50);
-  exportToCSV(userSatisfaction, 'fakerData/user_satisfaction.csv');
 };
