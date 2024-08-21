@@ -19,18 +19,24 @@ ChartJS.register(
   Legend
 );
 
-interface SatisfactionByQuarter {
+interface SatisfactionData {
   quarter: string;
   averageScore: number;
 }
 
 interface SatisfactionChartProps {
-  data: SatisfactionByQuarter[];
+  data: SatisfactionData[];
 }
 
 const SatisfactionChart: React.FC<SatisfactionChartProps> = ({ data }) => {
+  // Asumimos que todas las etiquetas están en el formato "Qx YYYY" o "MMM YYYY"
+  const year = data.length > 0 ? data[0].quarter.split(' ')[1] : '2024';
+
+  // Eliminar el año de las etiquetas para evitar repeticiones
+  const labels = data.map((d) => d.quarter.split(' ')[0]);
+
   const chartData = {
-    labels: data.map((d) => d.quarter),
+    labels: labels,
     datasets: [
       {
         label: 'Promedio de Satisfacción',
@@ -64,7 +70,7 @@ const SatisfactionChart: React.FC<SatisfactionChartProps> = ({ data }) => {
       },
       title: {
         display: true,
-        text: 'Promedio de Satisfacción del Usuario por Trimestre',
+        text: `Promedio de Satisfacción del Usuario en ${year}`,
       },
     },
     scales: {

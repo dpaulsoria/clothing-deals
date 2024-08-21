@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
 import { motion } from 'framer-motion';
 import SatisfactionChart from '../(dashboard)/charts/SatisfactionChart';
-import { SatisfactionByQuarter } from '@components/faker/userSatisfaction';
 
 interface UserSatisfactionData {
   id: string;
@@ -13,10 +12,16 @@ interface UserSatisfactionData {
   createdAt: string;
 }
 
+export interface SatisfactionData {
+  quarter: string;
+  averageScore: number;
+}
+
 export default function GraficosPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<SatisfactionByQuarter[]>([]);
+  const [data, setData] = useState<SatisfactionData[]>([]);
+  const [showQuarters, setShowQuarters] = useState(false); // Variable para controlar la visualización
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,44 +38,35 @@ export default function GraficosPage() {
           complete: (result) => {
             const satisfactionData = result.data;
 
-            // Paso 2: Agrupar los datos por trimestre
+            // Agrupar los datos por trimestre o por mes según la variable showQuarters
             const groupedData: { [key: string]: number[] } = {};
+
             satisfactionData.forEach((item) => {
               const date = new Date(item.createdAt);
-              console.log(`Date`, date);
-              const quarter = `Q${Math.ceil((date.getMonth() + 1) / 3)} ${date.getFullYear()}`;
-              console.log(quarter);
-              // Si el trimestre no existe en el grupo, lo creamos
-              if (!groupedData[quarter]) groupedData[quarter] = [];
+              const groupKey = showQuarters
+                ? `Q${Math.ceil((date.getMonth() + 1) / 3)} ${date.getFullYear()}`
+                : `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
 
-              console.log(groupedData);
-              // Almacenar el puntaje en el trimestre correspondiente
-              groupedData[quarter].push(Number(item.score));
+              // Si el grupo no existe en el conjunto, lo creamos
+              if (!groupedData[groupKey]) groupedData[groupKey] = [];
+
+              // Almacenar el puntaje en el grupo correspondiente
+              groupedData[groupKey].push(Number(item.score));
             });
 
-            // Paso 4: Calcular el promedio por trimestre
-            const averagedData: SatisfactionByQuarter[] = Object.keys(
+            // Calcular el promedio por grupo (trimestre o mes)
+            const averagedData: SatisfactionData[] = Object.keys(
               groupedData
-            ).map((quarter) => {
-              const scores = groupedData[quarter];
-
-              // Verificar el contenido del array de puntajes
-              console.log(`Quarter: ${quarter}, Scores Array: `, scores);
-
+            ).map((groupKey) => {
+              const scores = groupedData[groupKey];
               const totalScores = scores.length;
               const averageScore =
                 totalScores > 0
                   ? scores.reduce((sum, score) => sum + score, 0) / totalScores
                   : 0;
-
-              console.log(
-                `Quarter: ${quarter}, Total Scores: ${totalScores}, Average: ${averageScore}`
-              );
-
-              return { quarter, averageScore };
+              return { quarter: groupKey, averageScore };
             });
 
-            console.log('Final Averaged Data:', averagedData);
             setData(averagedData);
             setLoading(false);
           },
@@ -87,7 +83,7 @@ export default function GraficosPage() {
     };
 
     fetchData();
-  }, []);
+  }, [showQuarters]); // Dependencia de showQuarters para recargar los datos
 
   if (loading)
     return (
@@ -102,6 +98,7 @@ export default function GraficosPage() {
         Error: {error}
       </div>
     );
+
   return (
     <div className="container mx-auto p-6">
       <div className="top-0 z-10 pb-4 flex items-center justify-center">
@@ -117,6 +114,14 @@ export default function GraficosPage() {
       <div className="min-h-screen flex flex-col bg-gray-100">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl duration-300 flex flex-col justify-between">
           <SatisfactionChart data={data} />
+        </div>
+        <div className="flex justify-center mt-4">
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+            onClick={() => setShowQuarters(!showQuarters)}
+          >
+            {showQuarters ? 'Mostrar por Meses' : 'Mostrar por Trimestres'}
+          </button>
         </div>
       </div>
     </div>
