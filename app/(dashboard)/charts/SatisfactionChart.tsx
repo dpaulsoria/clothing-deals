@@ -12,8 +12,8 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import ExportPDFModal from './ExportPDFModal';
 
 ChartJS.register(
   CategoryScale,
@@ -30,7 +30,7 @@ interface UserSatisfactionData {
 }
 
 interface SatisfactionData {
-  quarter: string;
+  period: string;
   averageScore: number;
 }
 
@@ -39,8 +39,9 @@ const SatisfactionChart: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<SatisfactionData[]>([]);
   const [showQuarters, setShowQuarters] = useState(false);
-  const [selectedYear, setSelectedYear] = useState<string | null>('2024');
+  const [selectedYear, setSelectedYear] = useState<string>('2024');
   const [availableYears, setAvailableYears] = useState<string[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -68,8 +69,8 @@ const SatisfactionChart: React.FC = () => {
               if (year !== selectedYear) return;
 
               const groupKey = showQuarters
-                ? `Q${Math.ceil((date.getMonth() + 1) / 3)} ${year}`
-                : `${date.toLocaleString('default', { month: 'short' })} ${year}`;
+                ? `Q${Math.ceil((date.getMonth() + 1) / 3)}`
+                : date.toLocaleString('default', { month: 'short' });
 
               if (!groupedData[groupKey]) groupedData[groupKey] = [];
               groupedData[groupKey].push(Number(item.score));
@@ -84,10 +85,10 @@ const SatisfactionChart: React.FC = () => {
                 totalScores > 0
                   ? scores.reduce((sum, score) => sum + score, 0) / totalScores
                   : 0;
-              return { quarter: groupKey, averageScore };
+              return { period: groupKey, averageScore };
             });
 
-            setAvailableYears(Array.from(years));
+            setAvailableYears(Array.from(years).sort());
             setData(averagedData);
             setLoading(false);
           },
@@ -106,33 +107,12 @@ const SatisfactionChart: React.FC = () => {
     fetchData();
   }, [showQuarters, selectedYear]);
 
-  const handleExportPDF = () => {
-    const input = document.getElementById('user-satisfaction-chart');
-    if (input) {
-      html2canvas(input).then((canvas) => {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF();
-        const imgWidth = 190;
-        const pageHeight = pdf.internal.pageSize.height;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        let heightLeft = imgHeight;
+  const satisfactionColumns = [
+    { header: 'Period', key: 'period' },
+    { header: 'Average Score', key: 'averageScore' },
+  ];
 
-        let position = 10;
-
-        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-
-        while (heightLeft >= 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-        }
-
-        pdf.save('user_satisfaction_chart.pdf');
-      });
-    }
-  };
+  const omittedColumns = []; // No omitir columnas en este caso
 
   const handleExportImage = () => {
     const input = document.getElementById('user-satisfaction-chart');
@@ -147,46 +127,26 @@ const SatisfactionChart: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen text-gray-700 bg-gray-100">
-        Cargando estadísticas...
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-screen text-red-600 bg-gray-100">
-        Error: {error}
-      </div>
-    );
-  }
-
-  const year = data.length > 0 ? data[0].quarter.split(' ')[1] : '2024';
-  const labels = data.map((d) => d.quarter.split(' ')[0]);
-
+  const labels = data.map((d) => d.period);
   const chartData = {
-    labels: labels,
+    labels,
     datasets: [
       {
         label: 'Promedio de Satisfacción',
         data: data.map((d) => d.averageScore),
-        backgroundColor: data.map(
-          (d) =>
-            d.averageScore >= 4.2
-              ? 'rgba(75, 192, 192, 0.7)' // Verde
-              : d.averageScore >= 3
-                ? 'rgba(255, 205, 86, 0.7)' // Amarillo
-                : 'rgba(255, 99, 132, 0.7)' // Rojo
+        backgroundColor: data.map((d) =>
+          d.averageScore >= 4.2
+            ? 'rgba(75, 192, 192, 0.7)'
+            : d.averageScore >= 3
+              ? 'rgba(255, 205, 86, 0.7)'
+              : 'rgba(255, 99, 132, 0.7)'
         ),
-        borderColor: data.map(
-          (d) =>
-            d.averageScore >= 4.2
-              ? 'rgba(75, 192, 192, 1)' // Verde
-              : d.averageScore >= 3
-                ? 'rgba(255, 205, 86, 1)' // Amarillo
-                : 'rgba(255, 99, 132, 1)' // Rojo
+        borderColor: data.map((d) =>
+          d.averageScore >= 4.2
+            ? 'rgba(75, 192, 192, 1)'
+            : d.averageScore >= 3
+              ? 'rgba(255, 205, 86, 1)'
+              : 'rgba(255, 99, 132, 1)'
         ),
         borderWidth: 1,
       },
@@ -201,7 +161,7 @@ const SatisfactionChart: React.FC = () => {
       },
       title: {
         display: true,
-        text: `Promedio de Satisfacción del Usuario en ${year}`,
+        text: `Promedio de Satisfacción del Usuario en ${selectedYear}`,
       },
     },
     scales: {
@@ -215,18 +175,17 @@ const SatisfactionChart: React.FC = () => {
   return (
     <div className="container mx-auto p-6">
       <div
-        className="top-0 z-10 pb-4 flex items-center justify-center"
         id="user-satisfaction-chart"
+        className="top-0 z-10 pb-4 flex items-center justify-center"
       >
         <Bar data={chartData} options={options} />
       </div>
       <div className="flex justify-center mt-4 gap-4">
         <select
           className="bg-gray-200 text-gray-700 p-2 rounded"
-          value={selectedYear || ''}
-          onChange={(e) => setSelectedYear(e.target.value || null)}
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(e.target.value)}
         >
-          <option value="">Seleccionar Año</option>
           {availableYears.map((year) => (
             <option key={year} value={year}>
               {year}
@@ -240,13 +199,13 @@ const SatisfactionChart: React.FC = () => {
           {showQuarters ? 'Mostrar por Meses' : 'Mostrar por Trimestres'}
         </button>
       </div>
-      <div className="flex justify-center mt-4">
-        <button
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700 transition mr-2"
-          onClick={handleExportPDF}
-        >
-          Exportar como PDF
-        </button>
+      <div className="flex justify-center mt-4 gap-4">
+        {/*<button*/}
+        {/*  className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700 transition"*/}
+        {/*  onClick={() => setIsModalOpen(true)}*/}
+        {/*>*/}
+        {/*  Exportar PDF*/}
+        {/*</button>*/}
         <button
           className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-700 transition"
           onClick={handleExportImage}
@@ -254,6 +213,15 @@ const SatisfactionChart: React.FC = () => {
           Exportar como Imagen
         </button>
       </div>
+      <ExportPDFModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        data={data}
+        columns={satisfactionColumns}
+        title="User Satisfaction Report"
+        companyName="CLOTHING DEALS"
+        omittedColumns={omittedColumns}
+      />
     </div>
   );
 };
