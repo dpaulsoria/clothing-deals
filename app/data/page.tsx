@@ -6,7 +6,7 @@ import SatisfactionChart from '../(dashboard)/charts/SatisfactionChart';
 
 export default function GraficosPage() {
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 min-h-screen">
       <div className="top-0 z-10 pb-4 flex items-center justify-center">
         <motion.h1
           className="text-3xl font-bold text-indigo-600"
