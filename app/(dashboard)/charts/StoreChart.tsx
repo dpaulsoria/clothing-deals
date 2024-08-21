@@ -23,9 +23,10 @@ ChartJS.register(
 );
 
 export interface StoreData {
-  storeId: string;
+  id: string;
+  name: string;
+  joinedDate: string;
   marketingTechnique: string;
-  createdAt: string;
 }
 
 const StoreChart: React.FC = () => {
@@ -51,7 +52,7 @@ const StoreChart: React.FC = () => {
             const groupedData: { [key: string]: number } = {};
 
             storeData.forEach((item) => {
-              const date = new Date(item.createdAt);
+              const date = new Date(item.joinedDate);
               const groupKey = showQuarters
                 ? `Q${Math.ceil((date.getMonth() + 1) / 3)} ${date.getFullYear()}`
                 : `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;

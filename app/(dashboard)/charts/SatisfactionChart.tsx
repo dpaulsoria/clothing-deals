@@ -12,6 +12,8 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 ChartJS.register(
   CategoryScale,
@@ -34,6 +36,8 @@ const SatisfactionChart: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<SatisfactionData[]>([]);
   const [showQuarters, setShowQuarters] = useState(false);
+  const [selectedYear, setSelectedYear] = useState<string | null>(null);
+  const [availableYears, setAvailableYears] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,23 +54,38 @@ const SatisfactionChart: React.FC = () => {
           complete: (result) => {
             const satisfactionData = result.data;
 
-            // Agrupar los datos por trimestre o por mes según la variable showQuarters
             const groupedData: { [key: string]: number[] } = {};
+            const years: Set<string> = new Set();
 
             satisfactionData.forEach((item) => {
               const date = new Date(item.createdAt);
+              const year = date.getFullYear().toString();
+              years.add(year);
+
               const groupKey = showQuarters
-                ? `Q${Math.ceil((date.getMonth() + 1) / 3)} ${date.getFullYear()}`
-                : `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
+                ? `Q${Math.ceil((date.getMonth() + 1) / 3)} ${year}`
+                : `${date.toLocaleString('default', { month: 'short' })} ${year}`;
 
               if (!groupedData[groupKey]) groupedData[groupKey] = [];
               groupedData[groupKey].push(Number(item.score));
             });
 
+            const filteredData = selectedYear
+              ? Object.keys(groupedData)
+                  .filter((key) => key.includes(selectedYear))
+                  .reduce(
+                    (acc, key) => {
+                      acc[key] = groupedData[key];
+                      return acc;
+                    },
+                    {} as { [key: string]: number[] }
+                  )
+              : groupedData;
+
             const averagedData: SatisfactionData[] = Object.keys(
-              groupedData
+              filteredData
             ).map((groupKey) => {
-              const scores = groupedData[groupKey];
+              const scores = filteredData[groupKey];
               const totalScores = scores.length;
               const averageScore =
                 totalScores > 0
@@ -75,6 +94,7 @@ const SatisfactionChart: React.FC = () => {
               return { quarter: groupKey, averageScore };
             });
 
+            setAvailableYears(Array.from(years));
             setData(averagedData);
             setLoading(false);
           },
@@ -91,7 +111,48 @@ const SatisfactionChart: React.FC = () => {
     };
 
     fetchData();
-  }, [showQuarters]); // Dependencia de showQuarters para recargar los datos
+  }, [showQuarters, selectedYear]); // Dependencias para recargar los datos
+
+  const handleExportPDF = () => {
+    const input = document.getElementById('chart-container');
+    if (input) {
+      html2canvas(input).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF();
+        const imgWidth = 190; // Anchura de la imagen en el PDF (ajústalo si es necesario)
+        const pageHeight = pdf.internal.pageSize.height;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+
+        let position = 10;
+
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+
+        pdf.save('user_satisfaction_chart.pdf');
+      });
+    }
+  };
+
+  const handleExportImage = () => {
+    const input = document.getElementById('chart-container');
+    if (input) {
+      html2canvas(input).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = imgData;
+        link.download = 'user_satisfaction_chart.png';
+        link.click();
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -109,10 +170,7 @@ const SatisfactionChart: React.FC = () => {
     );
   }
 
-  // Asumimos que todas las etiquetas están en el formato "Qx YYYY" o "MMM YYYY"
   const year = data.length > 0 ? data[0].quarter.split(' ')[1] : '2024';
-
-  // Eliminar el año de las etiquetas para evitar repeticiones
   const labels = data.map((d) => d.quarter.split(' ')[0]);
 
   const chartData = {
@@ -164,7 +222,9 @@ const SatisfactionChart: React.FC = () => {
   return (
     <div className="container mx-auto p-6">
       <div className="top-0 z-10 pb-4 flex items-center justify-center">
-        <Bar data={chartData} options={options} />
+        <div id="chart-container">
+          <Bar data={chartData} options={options} />
+        </div>
       </div>
       <div className="flex justify-center mt-4">
         <button
@@ -172,6 +232,34 @@ const SatisfactionChart: React.FC = () => {
           onClick={() => setShowQuarters(!showQuarters)}
         >
           {showQuarters ? 'Mostrar por Meses' : 'Mostrar por Trimestres'}
+        </button>
+      </div>
+      <div className="flex justify-center mt-4">
+        <select
+          className="bg-white border border-gray-300 rounded-md px-4 py-2 text-gray-700 focus:outline-none focus:border-indigo-500"
+          value={selectedYear || ''}
+          onChange={(e) => setSelectedYear(e.target.value || null)}
+        >
+          <option value="">Seleccionar Año</option>
+          {availableYears.map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="flex justify-center mt-4">
+        <button
+          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700 transition mr-2"
+          onClick={handleExportPDF}
+        >
+          Exportar como PDF
+        </button>
+        <button
+          className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-700 transition"
+          onClick={handleExportImage}
+        >
+          Exportar como Imagen
         </button>
       </div>
     </div>

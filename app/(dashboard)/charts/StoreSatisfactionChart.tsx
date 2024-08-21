@@ -59,7 +59,7 @@ const StoreSatisfactionChart: React.FC = () => {
               if (!groupedData[item.aspect]) {
                 groupedData[item.aspect] = [];
               }
-              groupedData[item.aspect].push(item.score);
+              groupedData[item.aspect].push(Number(item.score));
             });
 
             const averagedData: RadarChartData[] = Object.keys(groupedData).map(
@@ -122,11 +122,11 @@ const StoreSatisfactionChart: React.FC = () => {
     ],
   };
 
-  const options = {
+  const options: any = {
     responsive: true,
     plugins: {
       legend: {
-        position: 'top' as const,
+        position: 'top',
       },
       title: {
         display: true,
@@ -137,13 +137,18 @@ const StoreSatisfactionChart: React.FC = () => {
       r: {
         ticks: {
           beginAtZero: true,
-          max: 5,
+          max: 5, // Ajustar el máximo a 5, que es el valor esperado
+        },
+        pointLabels: {
+          font: {
+            size: 14,
+          },
         },
       },
     },
   };
 
-  return <Radar data={chartData} options={options as any} />;
+  return <Radar data={chartData} options={options} />;
 };
 
 export default StoreSatisfactionChart;
