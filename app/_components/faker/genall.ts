@@ -15,15 +15,15 @@ export const fakerUsers = () => {
 };
 
 export const fakerProfitMargins = () => {
-  const profitMargins = generateProfitMargins(16); // 16 quarters in 4 years
+  const profitMargins = generateProfitMargins(5000); // 16 quarters in 4 years
   exportToCSV(profitMargins, 'profit_margins.csv');
 };
 
 export const fakerStores = () => {
-  const stores = generateStores(5);
+  const stores = generateStores(5000);
   exportToCSV(stores, 'stores.csv');
 
   // Generar Store Satisfaction basada en las tiendas generadas
-  const storeSatisfaction = generateStoreSatisfaction(stores, 20);
+  const storeSatisfaction = generateStoreSatisfaction(stores, 200);
   exportToCSV(storeSatisfaction, 'store_satisfaction.csv');
 };

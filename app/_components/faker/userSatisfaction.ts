@@ -13,10 +13,20 @@ export const generateUserSatisfaction = (
   users: User[],
   count: number
 ): UserSatisfaction[] => {
-  return Array.from({ length: count }).map(() => ({
-    id: uuidv4(),
-    userId: faker.helpers.arrayElement(users).id,
-    score: faker.datatype.number({ min: 1, max: 5, precision: 0.1 }),
-    createdAt: faker.date.between('2020-01-01', '2024-12-31'),
-  }));
+  const currentYear = new Date().getFullYear();
+  const startYear = currentYear - 9; // Generar datos de los últimos 10 años
+
+  return Array.from({ length: count }).map(() => {
+    const year = faker.date
+      .between(`${startYear}-01-01`, `${currentYear}-12-31`)
+      .getFullYear();
+    const createdAt = faker.date.between(`${year}-01-01`, `${year}-12-31`);
+
+    return {
+      id: uuidv4(),
+      userId: faker.helpers.arrayElement(users).id,
+      score: faker.datatype.number({ min: 1, max: 5, precision: 0.1 }),
+      createdAt,
+    };
+  });
 };

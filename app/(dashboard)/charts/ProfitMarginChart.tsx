@@ -29,17 +29,20 @@ ChartJS.register(
 );
 
 export interface ProfitMargin {
-  quarter: string;
+  month: string;
+  year: string;
   actualMargin: number;
   targetMargin: number;
   deviation: number;
+  createdAt: Date;
 }
 
 const ProfitMarginChart: React.FC = () => {
   const [data, setData] = useState<ProfitMargin[]>([]);
   const [filteredData, setFilteredData] = useState<ProfitMargin[]>([]);
   const [showQuarters, setShowQuarters] = useState(false);
-  const [selectedYear, setSelectedYear] = useState<string | null>(null);
+  const [selectedYear, setSelectedYear] = useState<string>('2024');
+  const [availableYears, setAvailableYears] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,8 +59,18 @@ const ProfitMarginChart: React.FC = () => {
         Papa.parse<ProfitMargin>(csvData, {
           header: true,
           complete: (result) => {
-            setData(result.data);
-            setFilteredData(result.data);
+            const parsedData = result.data.map((d) => ({
+              ...d,
+              actualMargin: parseFloat(d.actualMargin),
+              targetMargin: parseFloat(d.targetMargin),
+              deviation: parseFloat(d.deviation),
+            })) as ProfitMargin[];
+            setData(parsedData);
+            const years = Array.from(
+              new Set(parsedData.map((d) => d.year))
+            ).sort();
+            setAvailableYears(years);
+            setFilteredData(parsedData.filter((d) => d.year === '2024'));
           },
           error: (error) => {
             console.error('Error al leer el archivo CSV:', error.message);
@@ -71,23 +84,69 @@ const ProfitMarginChart: React.FC = () => {
     fetchData();
   }, []);
 
+  const groupDataByMonth = (data: ProfitMargin[]): ProfitMargin[] => {
+    const grouped = data.reduce(
+      (acc, item) => {
+        const key = `${item.month} ${item.year}`;
+        if (!acc[key]) {
+          acc[key] = {
+            ...item,
+            actualMargin: 0,
+            targetMargin: 0,
+            deviation: 0,
+          };
+        }
+        acc[key].actualMargin += item.actualMargin;
+        acc[key].targetMargin += item.targetMargin;
+        acc[key].deviation += item.deviation;
+        return acc;
+      },
+      {} as { [key: string]: ProfitMargin }
+    );
+
+    return Object.values(grouped);
+  };
+
+  const groupDataByQuarter = (data: ProfitMargin[]): ProfitMargin[] => {
+    const grouped = data.reduce(
+      (acc, item) => {
+        const quarter = `Q${Math.ceil((new Date(item.createdAt).getMonth() + 1) / 3)} ${item.year}`;
+        if (!acc[quarter]) {
+          acc[quarter] = {
+            ...item,
+            month: quarter,
+            actualMargin: 0,
+            targetMargin: 0,
+            deviation: 0,
+          };
+        }
+        acc[quarter].actualMargin += item.actualMargin;
+        acc[quarter].targetMargin += item.targetMargin;
+        acc[quarter].deviation += item.deviation;
+        return acc;
+      },
+      {} as { [key: string]: ProfitMargin }
+    );
+
+    return Object.values(grouped);
+  };
+
   useEffect(() => {
-    if (selectedYear) {
-      const filtered = data.filter((d) => d.quarter.includes(selectedYear));
-      setFilteredData(filtered);
-    } else {
-      setFilteredData(data);
-    }
-  }, [selectedYear, data]);
+    const filtered = data.filter((d) => d.year === selectedYear);
+    const groupedData = showQuarters
+      ? groupDataByQuarter(filtered)
+      : groupDataByMonth(filtered);
+    setFilteredData(groupedData);
+  }, [selectedYear, data, showQuarters]);
 
   const chartData = {
-    labels: filteredData.map((d) => d.quarter),
+    labels: filteredData.map((d) => d.month),
     datasets: [
       {
         type: 'bar' as const,
         label: 'Margen Real (%)',
         data: filteredData.map((d) => d.actualMargin),
-        backgroundColor: 'rgba(75, 192, 192, 0.7)', // Verde claro para las barras del margen real
+        backgroundColor: 'rgba(75, 192, 192, 0.7)',
         borderColor: 'rgba(75, 192, 192, 1)',
         borderWidth: 1,
         yAxisID: 'y',
@@ -96,7 +155,7 @@ const ProfitMarginChart: React.FC = () => {
         type: 'bar' as const,
         label: 'Margen Objetivo (%)',
         data: filteredData.map((d) => d.targetMargin),
-        backgroundColor: 'rgba(255, 205, 86, 0.7)', // Amarillo para las barras del margen objetivo
+        backgroundColor: 'rgba(255, 205, 86, 0.7)',
         borderColor: 'rgba(255, 205, 86, 1)',
         borderWidth: 1,
         yAxisID: 'y',
@@ -107,7 +166,7 @@ const ProfitMarginChart: React.FC = () => {
         data: filteredData.map((d) => d.deviation),
         borderColor: filteredData.map((d) =>
           d.deviation >= 0 ? 'rgba(75, 192, 192, 1)' : 'rgba(255, 99, 132, 1)'
-        ), // Verde para desviación positiva, rojo para negativa
+        ),
         borderWidth: 2,
         fill: false,
         yAxisID: 'y1',
@@ -123,7 +182,7 @@ const ProfitMarginChart: React.FC = () => {
       },
       title: {
         display: true,
-        text: 'Comparación del Margen de Beneficio y Desviación',
+        text: `Comparación del Margen de Beneficio y Desviación (${selectedYear})`,
       },
     },
     scales: {
@@ -192,10 +251,6 @@ const ProfitMarginChart: React.FC = () => {
     }
   };
 
-  const years = Array.from(
-    new Set(data.map((d) => d.quarter.split(' ')[1]))
-  ).sort();
-
   return (
     <div className="container mx-auto p-6" id="profit-margin-chart">
       <div className="top-0 z-10 pb-4 flex items-center justify-center">
@@ -208,7 +263,7 @@ const ProfitMarginChart: React.FC = () => {
           onChange={(e) => setSelectedYear(e.target.value || null)}
         >
           <option value="">Seleccionar Año</option>
-          {years.map((year) => (
+          {availableYears.map((year) => (
             <option key={year} value={year}>
               {year}
             </option>

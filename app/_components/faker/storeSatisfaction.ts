@@ -14,16 +14,26 @@ export const generateStoreSatisfaction = (
   stores: Store[],
   count: number
 ): StoreSatisfaction[] => {
-  return Array.from({ length: count }).map(() => ({
-    id: uuidv4(),
-    storeId: faker.helpers.arrayElement(stores).id,
-    aspect: faker.helpers.arrayElement([
-      'visibilidad',
-      'facilidad de uso',
-      'soporte',
-      'rendimiento de ventas',
-    ]),
-    score: faker.datatype.number({ min: 1, max: 5 }),
-    createdAt: faker.date.between('2020-01-01', '2024-12-31'),
-  }));
+  const currentYear = new Date().getFullYear();
+  const startYear = currentYear - 9; // Generar datos de los últimos 10 años
+
+  return Array.from({ length: count }).map(() => {
+    const year = faker.date
+      .between(`${startYear}-01-01`, `${currentYear}-12-31`)
+      .getFullYear();
+    const createdAt = faker.date.between(`${year}-01-01`, `${year}-12-31`);
+
+    return {
+      id: uuidv4(),
+      storeId: faker.helpers.arrayElement(stores).id,
+      aspect: faker.helpers.arrayElement([
+        'visibilidad',
+        'facilidad de uso',
+        'soporte',
+        'rendimiento de ventas',
+      ]),
+      score: faker.datatype.number({ min: 1, max: 5 }),
+      createdAt,
+    };
+  });
 };

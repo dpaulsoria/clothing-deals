@@ -36,7 +36,7 @@ const SatisfactionChart: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<SatisfactionData[]>([]);
   const [showQuarters, setShowQuarters] = useState(false);
-  const [selectedYear, setSelectedYear] = useState<string | null>(null);
+  const [selectedYear, setSelectedYear] = useState<string | null>('2024');
   const [availableYears, setAvailableYears] = useState<string[]>([]);
 
   useEffect(() => {
@@ -70,17 +70,15 @@ const SatisfactionChart: React.FC = () => {
               groupedData[groupKey].push(Number(item.score));
             });
 
-            const filteredData = selectedYear
-              ? Object.keys(groupedData)
-                  .filter((key) => key.includes(selectedYear))
-                  .reduce(
-                    (acc, key) => {
-                      acc[key] = groupedData[key];
-                      return acc;
-                    },
-                    {} as { [key: string]: number[] }
-                  )
-              : groupedData;
+            const filteredData = Object.keys(groupedData)
+              .filter((key) => key.includes('2024'))
+              .reduce(
+                (acc, key) => {
+                  acc[key] = groupedData[key];
+                  return acc;
+                },
+                {} as { [key: string]: number[] }
+              );
 
             const averagedData: SatisfactionData[] = Object.keys(
               filteredData

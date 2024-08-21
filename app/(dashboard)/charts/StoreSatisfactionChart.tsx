@@ -38,7 +38,7 @@ interface RadarChartData {
 const StoreSatisfactionChart: React.FC = () => {
   const [data, setData] = useState<RadarChartData[]>([]);
   const [trendData, setTrendData] = useState<number[]>([]);
-  const [selectedYear, setSelectedYear] = useState<string | null>(null);
+  const [selectedYear, setSelectedYear] = useState<string | null>('2024');
   const [availableYears, setAvailableYears] = useState<string[]>([]);
   const [showQuarters, setShowQuarters] = useState(false);
 
@@ -78,24 +78,29 @@ const StoreSatisfactionChart: React.FC = () => {
             });
 
             const filteredData = selectedYear
-              ? satisfactionData.filter((item) =>
-                  item.createdAt.includes(selectedYear)
-                )
-              : satisfactionData;
+              ? Object.keys(groupedData)
+                  .filter((key) => key.includes(selectedYear))
+                  .reduce(
+                    (acc, key) => {
+                      acc[key] = groupedData[key];
+                      return acc;
+                    },
+                    {} as { [key: string]: number[] }
+                  )
+              : groupedData;
 
-            const averagedData: RadarChartData[] = Object.keys(groupedData).map(
-              (aspect) => {
-                const scores = groupedData[aspect];
-                const totalScores = scores.length;
-                const averageScore =
-                  totalScores > 0
-                    ? scores.reduce((sum, score) => sum + score, 0) /
-                      totalScores
-                    : 0;
+            const averagedData: RadarChartData[] = Object.keys(
+              filteredData
+            ).map((aspect) => {
+              const scores = filteredData[aspect];
+              const totalScores = scores.length;
+              const averageScore =
+                totalScores > 0
+                  ? scores.reduce((sum, score) => sum + score, 0) / totalScores
+                  : 0;
 
-                return { aspect, averageScore };
-              }
-            );
+              return { aspect, averageScore };
+            });
 
             const trend = averagedData.map((data) => data.averageScore);
             setTrendData(trend);
@@ -207,7 +212,6 @@ const StoreSatisfactionChart: React.FC = () => {
       },
     },
   };
-
   return (
     <div className="container mx-auto p-6" id="store-satisfaction-chart">
       <div className="top-0 z-10 pb-4 flex items-center justify-center">

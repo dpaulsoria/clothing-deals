@@ -9,14 +9,24 @@ export interface Store {
 }
 
 export const generateStores = (count: number): Store[] => {
-  return Array.from({ length: count }).map(() => ({
-    id: uuidv4(),
-    name: faker.company.name(),
-    joinedDate: faker.date.between('2020-01-01', '2024-12-31'),
-    marketingTechnique: faker.helpers.arrayElement([
-      'SEO',
-      'Social Media',
-      'Email Marketing',
-    ]),
-  }));
+  const currentYear = new Date().getFullYear();
+  const startYear = currentYear - 9; // Generar datos de los últimos 10 años
+
+  return Array.from({ length: count }).map(() => {
+    const year = faker.date
+      .between(`${startYear}-01-01`, `${currentYear}-12-31`)
+      .getFullYear();
+    const joinedDate = faker.date.between(`${year}-01-01`, `${year}-12-31`);
+
+    return {
+      id: uuidv4(),
+      name: faker.company.name(),
+      joinedDate,
+      marketingTechnique: faker.helpers.arrayElement([
+        'SEO',
+        'Social Media',
+        'Email Marketing',
+      ]),
+    };
+  });
 };

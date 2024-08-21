@@ -34,7 +34,7 @@ export interface StoreData {
 const StoreChart: React.FC = () => {
   const [data, setData] = useState<{ [key: string]: number }>({});
   const [showQuarters, setShowQuarters] = useState(false);
-  const [selectedYear, setSelectedYear] = useState<string | null>(null);
+  const [selectedYear, setSelectedYear] = useState<string | null>('2024');
   const [originalData, setOriginalData] = useState<StoreData[]>([]);
 
   useEffect(() => {
@@ -154,7 +154,7 @@ const StoreChart: React.FC = () => {
     responsive: true,
     plugins: {
       legend: {
-        display: false,
+        display: true,
       },
       title: {
         display: true,
