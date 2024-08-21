@@ -63,7 +63,7 @@ export default function RootLayout({
                   href="/data"
                   className="text-gray-700 hover:text-blue-600"
                 >
-                  Datos
+                  Dashboard
                 </Link>
                 <Link
                   href="/stores"

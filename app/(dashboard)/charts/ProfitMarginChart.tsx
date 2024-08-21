@@ -138,9 +138,27 @@ const ProfitMarginChart: React.FC = () => {
       : groupDataByMonth(filtered);
     setFilteredData(groupedData);
   }, [selectedYear, data, showQuarters]);
+  function abbreviateMonth(month: string): string {
+    const monthAbbreviations: { [key: string]: string } = {
+      January: 'Jan',
+      February: 'Feb',
+      March: 'Mar',
+      April: 'Apr',
+      May: 'May',
+      June: 'Jun',
+      July: 'Jul',
+      August: 'Aug',
+      September: 'Sep',
+      October: 'Oct',
+      November: 'Nov',
+      December: 'Dec',
+    };
+
+    return monthAbbreviations[month] || month;
+  }
 
   const chartData = {
-    labels: filteredData.map((d) => d.month),
+    labels: filteredData.map((d) => abbreviateMonth(d.month)),
     datasets: [
       {
         type: 'bar' as const,

@@ -2,19 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-import { Heatmap } from 'react-chartjs-2';
-import jsPDF from 'jspdf';
+import Plot from 'react-plotly.js';
 import html2canvas from 'html2canvas';
-
-ChartJS.register(CategoryScale, LinearScale, Title, Tooltip, Legend);
+import jsPDF from 'jspdf';
 
 export interface StoreData {
   id: string;
@@ -64,6 +54,45 @@ const StoreChart: React.FC = () => {
     processChartData(originalData);
   }, [showQuarters, selectedYear]);
 
+  const handleExportPDF = () => {
+    const chartElement = document.getElementById('store-heatmap');
+    if (chartElement) {
+      html2canvas(chartElement).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF();
+        const imgWidth = 190;
+        const pageHeight = pdf.internal.pageSize.height;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 10;
+
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+
+        pdf.save('store_satisfaction_chart.pdf');
+      });
+    }
+  };
+
+  const handleExportImage = () => {
+    const chartElement = document.getElementById('store-heatmap');
+    if (chartElement) {
+      html2canvas(chartElement).then((canvas) => {
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        link.download = 'store_satisfaction_chart.png';
+        link.click();
+      });
+    }
+  };
+
   const processChartData = (storeData: StoreData[]) => {
     const filteredData = selectedYear
       ? storeData.filter(
@@ -95,81 +124,34 @@ const StoreChart: React.FC = () => {
       heatmapData[techniqueIndex][timeIndex]++;
     });
 
-    setLabels(timeLabels.map((label, index) => `${label} ${selectedYear}`));
+    setLabels(timeLabels);
     setYLabels(techniques);
     setData(heatmapData);
   };
 
-  const handleExportPDF = () => {
-    const chartElement = document.getElementById('store-heatmap');
-    if (chartElement) {
-      html2canvas(chartElement).then((canvas) => {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF();
-        const imgWidth = 190;
-        const pageHeight = pdf.internal.pageSize.height;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        let heightLeft = imgHeight;
-        let position = 10;
-
-        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-
-        while (heightLeft >= 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-        }
-
-        pdf.save('store_heatmap.pdf');
-      });
-    }
-  };
-
-  const handleExportImage = () => {
-    const chartElement = document.getElementById('store-heatmap');
-    if (chartElement) {
-      html2canvas(chartElement).then((canvas) => {
-        const link = document.createElement('a');
-        link.href = canvas.toDataURL('image/png');
-        link.download = 'store_heatmap.png';
-        link.click();
-      });
-    }
-  };
-
-  const heatmapOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        display: true,
-      },
-      title: {
-        display: true,
-        text: `Distribución de Tiendas por Técnica de Marketing (${selectedYear})`,
-      },
-    },
-    scales: {
-      y: {
-        title: {
-          display: true,
-          text: 'Técnica de Marketing',
-        },
-      },
-      x: {
-        title: {
-          display: true,
-          text: showQuarters ? 'Trimestres' : 'Meses',
-        },
-      },
-    },
-  };
-
   return (
-    <div className="container mx-auto p-6" id="store-heatmap">
-      <div className="top-0 z-10 pb-4 flex items-center justify-center">
-        <Heatmap data={{ labels, yLabels, data }} options={heatmapOptions} />
+    <div className="container mx-auto p-6">
+      <div
+        id="store-heatmap"
+        className="top-0 z-10 pb-4 flex items-center justify-center"
+      >
+        <Plot
+          data={[
+            {
+              z: data,
+              x: labels,
+              y: yLabels,
+              type: 'heatmap',
+              colorscale: 'YlGnBu',
+            },
+          ]}
+          layout={{
+            title: `Distribución de Tiendas por Técnica de Marketing (${selectedYear})`,
+            xaxis: { title: showQuarters ? 'Trimestres' : 'Meses' },
+            yaxis: { title: 'Técnica de Marketing' },
+          }}
+          style={{ width: '100%', height: '100%' }}
+        />
       </div>
       <div className="flex justify-center mt-4 gap-4">
         <select

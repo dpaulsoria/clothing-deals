@@ -213,8 +213,11 @@ const StoreSatisfactionChart: React.FC = () => {
     },
   };
   return (
-    <div className="container mx-auto p-6" id="store-satisfaction-chart">
-      <div className="top-0 z-10 pb-4 flex items-center justify-center">
+    <div className="container mx-auto p-6">
+      <div
+        id="store-satisfaction-chart"
+        className="top-0 z-10 pb-4 flex items-center justify-center"
+      >
         <Radar data={chartData} options={options} />
       </div>
       <div className="flex justify-center mt-4 gap-4">

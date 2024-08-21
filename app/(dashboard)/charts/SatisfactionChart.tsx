@@ -107,7 +107,7 @@ const SatisfactionChart: React.FC = () => {
   }, [showQuarters, selectedYear]);
 
   const handleExportPDF = () => {
-    const input = document.getElementById('chart-container');
+    const input = document.getElementById('user-satisfaction-chart');
     if (input) {
       html2canvas(input).then((canvas) => {
         const imgData = canvas.toDataURL('image/png');
@@ -135,7 +135,7 @@ const SatisfactionChart: React.FC = () => {
   };
 
   const handleExportImage = () => {
-    const input = document.getElementById('chart-container');
+    const input = document.getElementById('user-satisfaction-chart');
     if (input) {
       html2canvas(input).then((canvas) => {
         const imgData = canvas.toDataURL('image/png');
@@ -213,10 +213,10 @@ const SatisfactionChart: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-6" id="user-satisfaction-chart">
+    <div className="container mx-auto p-6">
       <div
         className="top-0 z-10 pb-4 flex items-center justify-center"
-        id="chart-container"
+        id="user-satisfaction-chart"
       >
         <Bar data={chartData} options={options} />
       </div>
