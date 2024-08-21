@@ -36,7 +36,8 @@ export default function GraficosPage() {
           </h2>
           <ProfitMarginChart />
         </div>
-
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
         {/* Store Chart */}
         <div>
           <h2 className="text-2xl font-semibold text-center text-indigo-600 mb-4">

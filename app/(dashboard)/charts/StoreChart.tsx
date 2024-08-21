@@ -148,7 +148,16 @@ const StoreChart: React.FC = () => {
           layout={{
             title: `Distribución de Tiendas por Técnica de Marketing (${selectedYear})`,
             xaxis: { title: showQuarters ? 'Trimestres' : 'Meses' },
-            yaxis: { title: 'Técnica de Marketing' },
+            yaxis: {
+              title: 'Técnica de Marketing',
+              tickfont: {
+                size: 10, // Reducir tamaño de la fuente
+              },
+              automargin: true,
+            },
+            margin: {
+              l: 140, // Aumentar margen izquierdo para los nombres largos
+            },
           }}
           style={{ width: '100%', height: '100%' }}
         />
