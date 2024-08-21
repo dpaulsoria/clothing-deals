@@ -3,7 +3,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import SatisfactionChart from '../(dashboard)/charts/SatisfactionChart';
-import ProfitMarginChart from '@/app/(dashboard)/charts/ProfitMarginChart';
+import ProfitMarginChart from '../(dashboard)/charts/ProfitMarginChart';
+import StoreChart from '../(dashboard)/charts/StoreChart';
+import StoreSatisfactionChart from '@/app/(dashboard)/charts/StoreSatisfactionChart';
+import Store4Chart from '@/app/(dashboard)/charts/Store4Chart';
+
+const chartClassName =
+  'bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl duration-300 flex flex-col justify-between mb-6 max-w-full';
+const h2ClassName = 'text-2xl font-semibold text-center text-indigo-600 mt-6';
 
 export default function GraficosPage() {
   return (
@@ -21,18 +28,33 @@ export default function GraficosPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-100">
         {/* Componente SatisfactionChart */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl duration-300 flex flex-col justify-between mb-6 max-w-full">
-          <h2 className="text-2xl font-semibold text-center text-indigo-600 mt-6">
-            User Satisfaction Chart
-          </h2>
+        <div className={chartClassName}>
+          <h2 className={h2ClassName}>User Satisfaction Chart</h2>
           <SatisfactionChart />
         </div>
+
         {/* Componente de Margin Profit Chart*/}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl duration-300 flex flex-col justify-between mb-6 max-w-full">
-          <h2 className="text-2xl font-semibold text-center text-indigo-600 mt-6">
-            Margin Profit Chart
-          </h2>
+        <div className={chartClassName}>
+          <h2 className={h2ClassName}>Margin Profit Chart</h2>
           <ProfitMarginChart />
+        </div>
+
+        {/* Componente de Store Chart */}
+        <div className={chartClassName}>
+          <h2 className={h2ClassName}>Store Chart</h2>
+          <StoreChart />
+        </div>
+
+        {/* Componente de Store Satisfaction Chart */}
+        <div className={chartClassName}>
+          <h2 className={h2ClassName}>Store Satisfaction Chart</h2>
+          <StoreSatisfactionChart />
+        </div>
+
+        {/* Componente de Store 4 Chart */}
+        <div className={chartClassName}>
+          <h2 className={h2ClassName}>Store 4 Chart</h2>
+          <Store4Chart />
         </div>
       </div>
     </div>
