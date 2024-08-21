@@ -2,27 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
-import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
   Title,
   Tooltip,
   Legend,
 } from 'chart.js';
+import { Heatmap } from 'react-chartjs-2';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(CategoryScale, LinearScale, Title, Tooltip, Legend);
 
 export interface StoreData {
   id: string;
@@ -32,9 +24,11 @@ export interface StoreData {
 }
 
 const StoreChart: React.FC = () => {
-  const [data, setData] = useState<{ [key: string]: number }>({});
-  const [showQuarters, setShowQuarters] = useState(false);
+  const [data, setData] = useState<number[][]>([]);
+  const [labels, setLabels] = useState<string[]>([]);
+  const [yLabels, setYLabels] = useState<string[]>([]);
   const [selectedYear, setSelectedYear] = useState<string | null>('2024');
+  const [showQuarters, setShowQuarters] = useState(false);
   const [originalData, setOriginalData] = useState<StoreData[]>([]);
 
   useEffect(() => {
@@ -50,8 +44,9 @@ const StoreChart: React.FC = () => {
         Papa.parse<StoreData>(csvData, {
           header: true,
           complete: (result) => {
-            setOriginalData(result.data);
-            processChartData(result.data);
+            const parsedData = result.data as StoreData[];
+            setOriginalData(parsedData);
+            processChartData(parsedData);
           },
           error: (error) => {
             console.error('Error al leer el archivo CSV:', error.message);
@@ -71,28 +66,42 @@ const StoreChart: React.FC = () => {
 
   const processChartData = (storeData: StoreData[]) => {
     const filteredData = selectedYear
-      ? storeData.filter((item) => item.joinedDate.includes(selectedYear))
+      ? storeData.filter(
+          (item) =>
+            new Date(item.joinedDate).getFullYear().toString() === selectedYear
+        )
       : storeData;
 
-    const groupedData: { [key: string]: number } = {};
+    const techniques = Array.from(
+      new Set(filteredData.map((item) => item.marketingTechnique))
+    );
+    const timeLabels = showQuarters
+      ? ['Q1', 'Q2', 'Q3', 'Q4']
+      : Array.from({ length: 12 }, (_, i) =>
+          new Date(0, i).toLocaleString('default', { month: 'short' })
+        );
+
+    const heatmapData: number[][] = techniques.map((technique) =>
+      timeLabels.map(() => 0)
+    );
 
     filteredData.forEach((item) => {
       const date = new Date(item.joinedDate);
-      const groupKey = showQuarters
-        ? `Q${Math.ceil((date.getMonth() + 1) / 3)} ${date.getFullYear()}`
-        : `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
+      const timeIndex = showQuarters
+        ? Math.ceil((date.getMonth() + 1) / 3) - 1
+        : date.getMonth();
+      const techniqueIndex = techniques.indexOf(item.marketingTechnique);
 
-      const key = `${item.marketingTechnique} (${groupKey})`;
-
-      if (!groupedData[key]) groupedData[key] = 0;
-      groupedData[key]++;
+      heatmapData[techniqueIndex][timeIndex]++;
     });
 
-    setData(groupedData);
+    setLabels(timeLabels.map((label, index) => `${label} ${selectedYear}`));
+    setYLabels(techniques);
+    setData(heatmapData);
   };
 
   const handleExportPDF = () => {
-    const chartElement = document.getElementById('store-chart');
+    const chartElement = document.getElementById('store-heatmap');
     if (chartElement) {
       html2canvas(chartElement).then((canvas) => {
         const imgData = canvas.toDataURL('image/png');
@@ -113,44 +122,24 @@ const StoreChart: React.FC = () => {
           heightLeft -= pageHeight;
         }
 
-        pdf.save('store_chart.pdf');
+        pdf.save('store_heatmap.pdf');
       });
     }
   };
 
   const handleExportImage = () => {
-    const chartElement = document.getElementById('store-chart');
+    const chartElement = document.getElementById('store-heatmap');
     if (chartElement) {
       html2canvas(chartElement).then((canvas) => {
         const link = document.createElement('a');
         link.href = canvas.toDataURL('image/png');
-        link.download = 'store_chart.png';
+        link.download = 'store_heatmap.png';
         link.click();
       });
     }
   };
 
-  const years = Array.from(
-    new Set(
-      originalData.map((d) => new Date(d.joinedDate).getFullYear().toString())
-    )
-  ).sort();
-
-  const labels = Object.keys(data);
-  const chartData = {
-    labels,
-    datasets: [
-      {
-        label: 'Nuevas Tiendas Asociadas',
-        data: Object.values(data),
-        backgroundColor: 'rgba(54, 162, 235, 0.7)', // Azul para las barras
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const options = {
+  const heatmapOptions = {
     responsive: true,
     plugins: {
       legend: {
@@ -158,24 +147,29 @@ const StoreChart: React.FC = () => {
       },
       title: {
         display: true,
-        text: `Nuevas Tiendas Asociadas por Técnica de Marketing`,
+        text: `Distribución de Tiendas por Técnica de Marketing (${selectedYear})`,
       },
     },
     scales: {
       y: {
-        beginAtZero: true,
         title: {
           display: true,
-          text: 'Número de Tiendas',
+          text: 'Técnica de Marketing',
+        },
+      },
+      x: {
+        title: {
+          display: true,
+          text: showQuarters ? 'Trimestres' : 'Meses',
         },
       },
     },
   };
 
   return (
-    <div className="container mx-auto p-6" id="store-chart">
+    <div className="container mx-auto p-6" id="store-heatmap">
       <div className="top-0 z-10 pb-4 flex items-center justify-center">
-        <Bar data={chartData} options={options} />
+        <Heatmap data={{ labels, yLabels, data }} options={heatmapOptions} />
       </div>
       <div className="flex justify-center mt-4 gap-4">
         <select
@@ -184,11 +178,19 @@ const StoreChart: React.FC = () => {
           onChange={(e) => setSelectedYear(e.target.value || null)}
         >
           <option value="">Seleccionar Año</option>
-          {years.map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
+          {Array.from(
+            new Set(
+              originalData.map((d) =>
+                new Date(d.joinedDate).getFullYear().toString()
+              )
+            )
+          )
+            .sort()
+            .map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
         </select>
         <button
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 transition"

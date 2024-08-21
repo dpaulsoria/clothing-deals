@@ -24,7 +24,10 @@ ChartJS.register(
   Legend
 );
 
-import { UserSatisfaction as UserSatisfactionData } from '@components/faker/userSatisfaction';
+interface UserSatisfactionData {
+  createdAt: string;
+  score: string;
+}
 
 interface SatisfactionData {
   quarter: string;
@@ -62,6 +65,8 @@ const SatisfactionChart: React.FC = () => {
               const year = date.getFullYear().toString();
               years.add(year);
 
+              if (year !== selectedYear) return;
+
               const groupKey = showQuarters
                 ? `Q${Math.ceil((date.getMonth() + 1) / 3)} ${year}`
                 : `${date.toLocaleString('default', { month: 'short' })} ${year}`;
@@ -70,20 +75,10 @@ const SatisfactionChart: React.FC = () => {
               groupedData[groupKey].push(Number(item.score));
             });
 
-            const filteredData = Object.keys(groupedData)
-              .filter((key) => key.includes('2024'))
-              .reduce(
-                (acc, key) => {
-                  acc[key] = groupedData[key];
-                  return acc;
-                },
-                {} as { [key: string]: number[] }
-              );
-
             const averagedData: SatisfactionData[] = Object.keys(
-              filteredData
+              groupedData
             ).map((groupKey) => {
-              const scores = filteredData[groupKey];
+              const scores = groupedData[groupKey];
               const totalScores = scores.length;
               const averageScore =
                 totalScores > 0

@@ -20,6 +20,7 @@
     "buffer": "^6.0.3",
     "chart.js": "^4.4.4",
     "chartjs": "^0.3.24",
+    "chartjs-chart-geo": "^4.3.1",
     "framer-motion": "^11.3.28",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
