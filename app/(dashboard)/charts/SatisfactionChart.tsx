@@ -111,7 +111,7 @@ const SatisfactionChart: React.FC = () => {
     };
 
     fetchData();
-  }, [showQuarters, selectedYear]); // Dependencias para recargar los datos
+  }, [showQuarters, selectedYear]);
 
   const handleExportPDF = () => {
     const input = document.getElementById('chart-container');
@@ -119,7 +119,7 @@ const SatisfactionChart: React.FC = () => {
       html2canvas(input).then((canvas) => {
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF();
-        const imgWidth = 190; // Anchura de la imagen en el PDF (ajústalo si es necesario)
+        const imgWidth = 190;
         const pageHeight = pdf.internal.pageSize.height;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
         let heightLeft = imgHeight;
