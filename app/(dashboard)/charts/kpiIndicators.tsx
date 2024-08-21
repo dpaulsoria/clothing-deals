@@ -1,103 +1,145 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Papa from 'papaparse';
-import { Bar } from 'react-chartjs-2';
+import { Bar, Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
+  LineElement,
+  PointElement,
   Title,
   Tooltip,
   Legend,
 } from 'chart.js';
+import {
+  ProfitMargin,
+  Store,
+  StoreSatisfaction,
+  User,
+  UserSatisfaction,
+} from './models';
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
+  LineElement,
+  PointElement,
   Title,
   Tooltip,
   Legend
 );
 
-const KPIIndicators: React.FC = () => {
-  const [profitData, setProfitData] = useState<any[]>([]);
-  const [storeSatisfactionData, setStoreSatisfactionData] = useState<any[]>([]);
-  const [userSatisfactionData, setUserSatisfactionData] = useState<any[]>([]);
-  const [totalStores, setTotalStores] = useState<number>(0);
-  const [totalUsers, setTotalUsers] = useState<number>(0);
+interface KPIIndicatorsProps {
+  profitMargins: ProfitMargin[];
+  storeSatisfactions: StoreSatisfaction[];
+  userSatisfactions: UserSatisfaction[];
+  stores: Store[];
+  users: User[];
+}
 
-  useEffect(() => {
-    const fetchData = async (
-      filePath: string,
-      setData: React.Dispatch<React.SetStateAction<any[]>>
-    ) => {
-      try {
-        const response = await fetch(filePath);
-        if (!response.ok) throw new Error(`Error al cargar ${filePath}`);
-        const csvData = await response.text();
-        Papa.parse(csvData, {
-          header: true,
-          complete: (result) => setData(result.data),
-        });
-      } catch (error) {
-        console.error(error.message);
-      }
-    };
-
-    fetchData('/fakerData/profit_margin.csv', setProfitData);
-    fetchData('/fakerData/store_satisfaction.csv', setStoreSatisfactionData);
-    fetchData('/fakerData/use_satisfaction.csv', setUserSatisfactionData);
-    fetchData('/fakerData/stores.csv', (data) => setTotalStores(data.length));
-    fetchData('/fakerData/users.csv', (data) => setTotalUsers(data.length));
-  }, []);
-
-  const parseNumber = (value: any) => {
-    const parsed = parseFloat(value);
-    return isNaN(parsed) ? 0 : parsed;
-  };
-
-  const totalProfitMarginDeviation = profitData.reduce(
-    (sum, item) => sum + parseNumber(item.deviation),
-    0
+const KPIIndicators: React.FC<KPIIndicatorsProps> = ({
+  profitMargins,
+  storeSatisfactions,
+  userSatisfactions,
+  stores,
+  users,
+}) => {
+  const [selectedYear, setSelectedYear] = useState<string>('2024');
+  const availableYears = Array.from(
+    new Set(profitMargins.map((item) => item.year))
   );
-  const avgStoreSatisfaction =
-    storeSatisfactionData.reduce(
-      (sum, item) => sum + parseNumber(item.score),
-      0
-    ) / (storeSatisfactionData.length || 1);
-  const avgUserSatisfaction =
-    userSatisfactionData.reduce(
-      (sum, item) => sum + parseNumber(item.score),
-      0
-    ) / (userSatisfactionData.length || 1);
 
-  const barData = {
-    labels: [
-      'Profit Margin Deviation',
-      'Store Satisfaction',
-      'User Satisfaction',
-    ],
+  const filterByYear = (items, year: string) =>
+    items.filter(
+      (item) =>
+        item.year === year ||
+        new Date(item.createdAt).getFullYear().toString() === year
+    );
+
+  // Filtrar datos por el año seleccionado
+  const filteredProfitMargins = filterByYear(profitMargins, selectedYear);
+  const filteredStoreSatisfactions = filterByYear(
+    storeSatisfactions,
+    selectedYear
+  );
+  const filteredUserSatisfactions = filterByYear(
+    userSatisfactions,
+    selectedYear
+  );
+
+  // Agrupación de datos por mes y año para profit margins
+  const groupedProfitData: ProfitMargin[] = filteredProfitMargins.reduce(
+    (acc, item) => {
+      const monthYear = `${item.month} ${item.year}`;
+      if (!acc[monthYear]) {
+        acc[monthYear] = [];
+      }
+      acc[monthYear].push(item.deviation);
+      return acc;
+    },
+    {} as { [key: string]: number[] }
+  );
+
+  const lineLabels: string[] = Object.keys(groupedProfitData);
+  const lineDataValues: number[] = Object.values(groupedProfitData).map(
+    (values) =>
+      values.reduce((sum, val) => parseFloat(sum) + parseFloat(val), 0) /
+      parseFloat(values.length)
+  );
+
+  // Datos para el gráfico de línea (Profit Margin Deviation a lo largo del tiempo)
+  const lineData = {
+    labels: lineLabels,
     datasets: [
       {
-        label: 'KPI Metrics',
-        data: [
-          totalProfitMarginDeviation,
-          avgStoreSatisfaction,
-          avgUserSatisfaction,
-        ],
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.6)',
-          'rgba(75, 192, 192, 0.6)',
-          'rgba(54, 162, 235, 0.6)',
-        ],
-        borderColor: [
-          'rgba(255, 99, 132, 1)',
-          'rgba(75, 192, 192, 1)',
-          'rgba(54, 162, 235, 1)',
-        ],
+        label: 'Profit Margin Deviation (%)',
+        data: lineDataValues,
+        fill: false,
+        borderColor: 'rgba(255, 99, 132, 1)',
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        tension: 0.1,
+      },
+    ],
+  };
+
+  const lineOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: true,
+      },
+      title: {
+        display: true,
+        text: `Desviación del Margen de Beneficio - ${selectedYear}`,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+  };
+
+  // Calcular los promedios de satisfacción
+  const avgStoreSatisfaction =
+    filteredStoreSatisfactions.reduce((sum, item) => sum + item.score, 0) /
+    (filteredStoreSatisfactions.length || 1);
+  const avgUserSatisfaction =
+    filteredUserSatisfactions.reduce((sum, item) => sum + item.score, 0) /
+    (filteredUserSatisfactions.length || 1);
+
+  // Datos para el gráfico de barras (Satisfacción de Tiendas y Usuarios)
+  const barData = {
+    labels: ['Store Satisfaction', 'User Satisfaction'],
+    datasets: [
+      {
+        label: 'Average Satisfaction',
+        data: [avgStoreSatisfaction, avgUserSatisfaction],
+        backgroundColor: ['rgba(75, 192, 192, 0.6)', 'rgba(54, 162, 235, 0.6)'],
+        borderColor: ['rgba(75, 192, 192, 1)', 'rgba(54, 162, 235, 1)'],
         borderWidth: 1,
       },
     ],
@@ -111,12 +153,13 @@ const KPIIndicators: React.FC = () => {
       },
       title: {
         display: true,
-        text: 'Indicadores Clave de Rendimiento (KPIs)',
+        text: `Satisfacción Promedio - ${selectedYear}`,
       },
     },
     scales: {
       y: {
         beginAtZero: true,
+        max: 5, // Escala Likert de 1 a 5
       },
     },
   };
@@ -124,24 +167,32 @@ const KPIIndicators: React.FC = () => {
   return (
     <div className="container mx-auto p-6">
       <h2 className="text-2xl font-bold mb-4">Resumen Ejecutivo</h2>
+      <div className="mb-4">
+        <label htmlFor="year-select" className="mr-2">
+          Filtrar por Año:
+        </label>
+        <select
+          id="year-select"
+          className="bg-gray-200 text-gray-700 p-2 rounded"
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(e.target.value)}
+        >
+          {availableYears.map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div className="p-4 bg-green-100 border-l-4 border-green-500 shadow-md">
           <h3 className="text-lg font-semibold">Total Stores</h3>
-          <p className="text-2xl">{totalStores}</p>
+          <p className="text-2xl">{stores.length}</p>
         </div>
         <div className="p-4 bg-yellow-100 border-l-4 border-yellow-500 shadow-md">
           <h3 className="text-lg font-semibold">Total Users</h3>
-          <p className="text-2xl">{totalUsers}</p>
+          <p className="text-2xl">{users.length}</p>
         </div>
-        <div className="p-4 bg-red-100 border-l-4 border-red-500 shadow-md">
-          <h3 className="text-lg font-semibold">Profit Margin Deviation</h3>
-          <p className="text-2xl">{totalProfitMarginDeviation.toFixed(2)}</p>
-        </div>
-      </div>
-      <div className="mb-6">
-        <Bar data={barData} options={barOptions} />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-4 bg-blue-100 border-l-4 border-blue-500 shadow-md">
           <h3 className="text-lg font-semibold">Average Store Satisfaction</h3>
           <p className="text-2xl">{avgStoreSatisfaction.toFixed(2)}</p>
@@ -150,6 +201,12 @@ const KPIIndicators: React.FC = () => {
           <h3 className="text-lg font-semibold">Average User Satisfaction</h3>
           <p className="text-2xl">{avgUserSatisfaction.toFixed(2)}</p>
         </div>
+      </div>
+      <div className="mb-6">
+        <Line data={lineData} options={lineOptions} />
+      </div>
+      <div className="mb-6">
+        <Bar data={barData} options={barOptions} />
       </div>
     </div>
   );
