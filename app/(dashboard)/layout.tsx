@@ -171,7 +171,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </header>
 
           {/* Page Content */}
-          <div className="flex-1 text-gray-700 ">{children}</div>
+          <div className="flex-1 text-gray-700">{children}</div>
           <ToastContainer />
         </main>
       </div>
