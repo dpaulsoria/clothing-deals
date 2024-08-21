@@ -220,23 +220,16 @@ const SatisfactionChart: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="top-0 z-10 pb-4 flex items-center justify-center">
-        <div id="chart-container">
-          <Bar data={chartData} options={options} />
-        </div>
+    <div className="container mx-auto p-6" id="user-satisfaction-chart">
+      <div
+        className="top-0 z-10 pb-4 flex items-center justify-center"
+        id="chart-container"
+      >
+        <Bar data={chartData} options={options} />
       </div>
-      <div className="flex justify-center mt-4">
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-          onClick={() => setShowQuarters(!showQuarters)}
-        >
-          {showQuarters ? 'Mostrar por Meses' : 'Mostrar por Trimestres'}
-        </button>
-      </div>
-      <div className="flex justify-center mt-4">
+      <div className="flex justify-center mt-4 gap-4">
         <select
-          className="bg-white border border-gray-300 rounded-md px-4 py-2 text-gray-700 focus:outline-none focus:border-indigo-500"
+          className="bg-gray-200 text-gray-700 p-2 rounded"
           value={selectedYear || ''}
           onChange={(e) => setSelectedYear(e.target.value || null)}
         >
@@ -247,6 +240,12 @@ const SatisfactionChart: React.FC = () => {
             </option>
           ))}
         </select>
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+          onClick={() => setShowQuarters(!showQuarters)}
+        >
+          {showQuarters ? 'Mostrar por Meses' : 'Mostrar por Trimestres'}
+        </button>
       </div>
       <div className="flex justify-center mt-4">
         <button
