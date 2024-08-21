@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Papa from 'papaparse';
 import { Bar, Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -13,13 +14,9 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import {
-  ProfitMargin,
-  Store,
-  StoreSatisfaction,
-  User,
-  UserSatisfaction,
-} from './models';
+import { ProfitMargin } from '@components/faker/profitMargin';
+import { StoreSatisfaction } from '@components/faker/storeSatisfaction';
+import { UserSatisfaction } from '@components/faker/userSatisfaction';
 
 ChartJS.register(
   CategoryScale,
@@ -32,32 +29,65 @@ ChartJS.register(
   Legend
 );
 
-interface KPIIndicatorsProps {
-  profitMargins: ProfitMargin[];
-  storeSatisfactions: StoreSatisfaction[];
-  userSatisfactions: UserSatisfaction[];
-  stores: Store[];
-  users: User[];
-}
-
-const KPIIndicators: React.FC<KPIIndicatorsProps> = ({
-  profitMargins,
-  storeSatisfactions,
-  userSatisfactions,
-  stores,
-  users,
-}) => {
+const KPIIndicators: React.FC = () => {
+  const [profitMargins, setProfitMargins] = useState<ProfitMargin[]>([]);
+  const [storeSatisfactions, setStoreSatisfactions] = useState<
+    StoreSatisfaction[]
+  >([]);
+  const [userSatisfactions, setUserSatisfactions] = useState<
+    UserSatisfaction[]
+  >([]);
   const [selectedYear, setSelectedYear] = useState<string>('2024');
+
+  useEffect(() => {
+    const fetchCSVData = async (
+      filePath: string,
+      setData: React.Dispatch<React.SetStateAction<any[]>>
+    ) => {
+      try {
+        const response = await fetch(filePath);
+        if (!response.ok) throw new Error(`Error al cargar ${filePath}`);
+        const csvData = await response.text();
+        Papa.parse(csvData, {
+          header: true,
+          complete: (result) => {
+            const data = result.data.map((item: any) => ({
+              ...item,
+              createdAt: new Date(item.createdAt),
+              ...(filePath.includes('profit_margins') && {
+                actualMargin: parseFloat(item.actualMargin),
+                targetMargin: parseFloat(item.targetMargin),
+                deviation: parseFloat(item.deviation),
+              }),
+              ...(filePath.includes('store_satisfaction') && {
+                score: parseFloat(item.score),
+              }),
+              ...(filePath.includes('user_satisfaction') && {
+                score: parseFloat(item.score),
+              }),
+            }));
+            setData(data);
+          },
+        });
+      } catch (error) {
+        console.error(error.message);
+      }
+    };
+
+    fetchCSVData('/fakerData/profit_margins.csv', setProfitMargins);
+    fetchCSVData('/fakerData/store_satisfaction.csv', setStoreSatisfactions);
+    fetchCSVData('/fakerData/user_satisfaction.csv', setUserSatisfactions);
+  }, []);
+
   const availableYears = Array.from(
     new Set(profitMargins.map((item) => item.year))
   );
 
-  const filterByYear = (items, year: string) =>
-    items.filter(
-      (item) =>
-        item.year === year ||
-        new Date(item.createdAt).getFullYear().toString() === year
-    );
+  const filterByYear = <T extends { createdAt: Date }>(
+    items: T[],
+    year: string
+  ): T[] =>
+    items.filter((item) => item.createdAt.getFullYear().toString() === year);
 
   // Filtrar datos por el año seleccionado
   const filteredProfitMargins = filterByYear(profitMargins, selectedYear);
@@ -70,27 +100,25 @@ const KPIIndicators: React.FC<KPIIndicatorsProps> = ({
     selectedYear
   );
 
-  // Agrupación de datos por mes y año para profit margins
-  const groupedProfitData: ProfitMargin[] = filteredProfitMargins.reduce(
-    (acc, item) => {
-      const monthYear = `${item.month} ${item.year}`;
-      if (!acc[monthYear]) {
-        acc[monthYear] = [];
+  // Agrupación de datos por mes dentro del año seleccionado para profit margins
+  const groupedProfitData: { [key: string]: number[] } =
+    filteredProfitMargins.reduce((acc, item) => {
+      const month = new Date(item.createdAt).toLocaleString('default', {
+        month: 'long',
+      });
+      if (!acc[month]) {
+        acc[month] = [];
       }
-      acc[monthYear].push(item.deviation);
+      acc[month].push(item.deviation);
       return acc;
-    },
-    {} as { [key: string]: number[] }
+    }, {});
+
+  const lineLabels = Object.keys(groupedProfitData);
+  const lineDataValues = Object.values(groupedProfitData).map(
+    (values) => values.reduce((sum, val) => sum + val, 0) / values.length
   );
 
-  const lineLabels: string[] = Object.keys(groupedProfitData);
-  const lineDataValues: number[] = Object.values(groupedProfitData).map(
-    (values) =>
-      values.reduce((sum, val) => parseFloat(sum) + parseFloat(val), 0) /
-      parseFloat(values.length)
-  );
-
-  // Datos para el gráfico de línea (Profit Margin Deviation a lo largo del tiempo)
+  // Datos para el gráfico de línea (Profit Margin Deviation por mes dentro del año seleccionado)
   const lineData = {
     labels: lineLabels,
     datasets: [
@@ -185,14 +213,6 @@ const KPIIndicators: React.FC<KPIIndicatorsProps> = ({
         </select>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        <div className="p-4 bg-green-100 border-l-4 border-green-500 shadow-md">
-          <h3 className="text-lg font-semibold">Total Stores</h3>
-          <p className="text-2xl">{stores.length}</p>
-        </div>
-        <div className="p-4 bg-yellow-100 border-l-4 border-yellow-500 shadow-md">
-          <h3 className="text-lg font-semibold">Total Users</h3>
-          <p className="text-2xl">{users.length}</p>
-        </div>
         <div className="p-4 bg-blue-100 border-l-4 border-blue-500 shadow-md">
           <h3 className="text-lg font-semibold">Average Store Satisfaction</h3>
           <p className="text-2xl">{avgStoreSatisfaction.toFixed(2)}</p>
