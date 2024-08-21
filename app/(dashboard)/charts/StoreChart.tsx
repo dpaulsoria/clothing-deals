@@ -113,8 +113,10 @@ const StoreChart: React.FC = () => {
   };
 
   return (
-    <div>
-      <Bar data={chartData} options={options} />
+    <div className="container mx-auto p-6">
+      <div className="top-0 z-10 pb-4 flex items-center justify-center">
+        <Bar data={chartData} options={options} />
+      </div>
       <div className="flex justify-center mt-4">
         <button
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
